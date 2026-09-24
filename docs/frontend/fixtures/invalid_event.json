@@ -1,0 +1,9 @@
+{
+  "event_id": "evt-bad-001",
+  "timestamp": "21/09/2026 14:03",
+  "event_type": "network_flow",
+  "source_ip": "10.0.4.777",
+  "destination_port": 70000,
+  "raw_content": "",
+  "metadata": {"source": "SYNTHETIC", "note": "Deliberately invalid - for testing input validation only"}
+}

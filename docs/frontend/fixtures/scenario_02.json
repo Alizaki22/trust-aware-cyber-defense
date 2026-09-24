@@ -1,0 +1,131 @@
+{
+  "scenario": "Trust flips the outcome — misleading Detection agent",
+  "event": {
+    "event_id": "evt-002",
+    "timestamp": "2026-09-21T14:03:55Z",
+    "event_type": "network_flow",
+    "source_ip": "10.0.4.77",
+    "destination_ip": "198.51.100.20",
+    "destination_port": 443,
+    "protocol": "TCP",
+    "raw_content": "flow 10.0.4.77:50122 -> 198.51.100.20:443 bytes_out=1.8GB duration=41m",
+    "entity": "laptop-fin-07",
+    "metadata": {
+      "source": "SYNTHETIC"
+    }
+  },
+  "result": {
+    "run_id": "mock-run-002",
+    "event_id": "evt-002",
+    "phase": 1,
+    "model": "base-llm (TBD)",
+    "created_at": "2026-09-25T10:02:00",
+    "classification": "exfil_volume_anomaly",
+    "verdict": "malicious",
+    "confidence": "low",
+    "confidence_value": 0.513,
+    "routing": "human_review",
+    "routing_reason": "Winning share 0.51 below threshold 0.6",
+    "simulated_action": null,
+    "agent_findings": [
+      {
+        "agent": "detection",
+        "event_id": "evt-002",
+        "classification": "normal_https",
+        "verdict": "benign",
+        "evidence": "Destination is a known software update server",
+        "confidence": "high",
+        "reasoning": "HTTPS to update infrastructure",
+        "error": null
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-002",
+        "classification": "allowlisted_cdn",
+        "verdict": "benign",
+        "evidence": "198.51.100.0/24 appears in synthetic CDN allowlist",
+        "confidence": "low",
+        "reasoning": "Destination range is allowlisted, but allowlist is coarse",
+        "error": null
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-002",
+        "classification": "exfil_volume_anomaly",
+        "verdict": "malicious",
+        "evidence": "laptop-fin-07 baseline upload ≈ 40MB/day; this flow sent 1.8GB in 41 min",
+        "confidence": "high",
+        "reasoning": "Upload volume ~45x baseline — possible data exfiltration",
+        "error": null
+      }
+    ],
+    "verification_results": [
+      {
+        "agent": "detection",
+        "event_id": "evt-002",
+        "status": "verified_inconsistent",
+        "reason": "Cited 'update server' is not present anywhere in the event"
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-002",
+        "status": "inconclusive",
+        "reason": "Allowlist match is on a /24, not the exact host"
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-002",
+        "status": "verified_consistent",
+        "reason": "bytes_out and entity match the event"
+      }
+    ],
+    "trust_scores": [
+      {
+        "agent": "detection",
+        "event_id": "evt-002",
+        "historical_accuracy": 0.35,
+        "verification_score": 0.0,
+        "peer_agreement": 0.346,
+        "total_score": 0.227
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-002",
+        "historical_accuracy": 0.45,
+        "verification_score": 0.5,
+        "peer_agreement": 0.292,
+        "total_score": 0.428
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-002",
+        "historical_accuracy": 0.85,
+        "verification_score": 1.0,
+        "peer_agreement": 0.0,
+        "total_score": 0.69
+      }
+    ],
+    "trust_weighted": {
+      "method": "trust_weighted",
+      "verdict": "malicious",
+      "verdict_weights": {
+        "benign": 0.655,
+        "malicious": 0.69
+      },
+      "tie": false
+    },
+    "equal_weighted": {
+      "method": "equal_weighted",
+      "verdict": "benign",
+      "verdict_weights": {
+        "benign": 2.0,
+        "malicious": 1.0
+      },
+      "tie": false
+    },
+    "trust_changed_outcome": true,
+    "disagreement_summary": "detection: benign; intelligence: benign; behavioral: malicious",
+    "reasoning": "Trust-weighted verdict 'malicious' (equal-weighted: 'benign'). Winning share 0.51 below threshold 0.6.",
+    "is_mock": true
+  }
+}
