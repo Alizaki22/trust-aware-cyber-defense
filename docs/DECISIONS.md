@@ -9,13 +9,13 @@ This document records important decisions agreed upon by the team, and clearly m
 | ID | Decision | Status |
 |---|---|---|
 | D-000 | Final project title | DECIDED |
-| D-001 | Two-phase development (Phase 1 baseline, Phase 2 fine-tuned) | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-002 | Four logical agent roles (Detection, Intelligence, Behavioral Analysis, Verification) | PROPOSED — REQUIRES TEAM APPROVAL |
+| D-001 | Two-phase development (Phase 1 baseline, Phase 2 fine-tuned) | DECIDED |
+| D-002 | Four logical agent roles (Detection, Intelligence, Behavioral Analysis, Verification) | DECIDED |
 | D-003 | Conceptual trust model (historical accuracy, verification, peer agreement) | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-004 | Fine-tuning scoped to Phase 2 only | PROPOSED — REQUIRES TEAM APPROVAL |
+| D-004 | Fine-tuning scoped to Phase 2 only | DECIDED |
 | D-005 | Phase 1 as literal baseline for Phase 2 comparison | PROPOSED — REQUIRES TEAM APPROVAL |
 | D-006 | Student-friendly/simple architecture over enterprise infrastructure | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-007 | Technology stack (language, framework, base LLM, etc.) | NOT YET DECIDED |
+| D-007 | Technology stack (language, framework, base LLM, etc.) | DECIDED |
 | D-008 | Three-student task distribution | PROPOSED — REQUIRES TEAM APPROVAL |
 | D-009 | Git branching model (main / develop / feature branches) | PROPOSED — REQUIRES TEAM APPROVAL |
 | D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
@@ -41,7 +41,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Consequences:** Phase 2 work depends on Phase 1 being functional first; the team cannot skip ahead to fine-tuning without a working baseline.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED
 
 ---
 
@@ -53,7 +53,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Consequences:** Keeps the system small enough for three students; may need revisiting if a role proves too broad to implement simply.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED
 
 ---
 
@@ -77,7 +77,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Consequences:** Phase 1 must be fully functional using only prompting, since there is no fine-tuned model yet.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED
 
 ---
 
@@ -101,9 +101,28 @@ This document records important decisions agreed upon by the team, and clearly m
 
 ### D-007 — Technology Stack
 
-**Decision:** Not yet made. Candidates under consideration (not commitments): Python, FastAPI, PyTorch, Hugging Face, PEFT, LoRA/QLoRA, an agent framework. None are required by this documentation.
+**Decision:** The team will use the following initial technology stack:
 
-**Status:** NOT YET DECIDED
+- Python 3.11
+- Pydantic
+- pytest
+- OpenAI SDK for initial LLM integration
+- FastAPI, only if an API layer is required
+- Hugging Face Transformers
+- PEFT
+- LoRA/QLoRA for Phase 2 fine-tuning
+- JSON/JSONL for initial data storage
+
+**Architecture approach:**
+- Plain Python modules for the multi-agent system.
+- No agent framework initially.
+- No database initially.
+- No RAG/vector database initially.
+- Additional technologies require team approval.
+
+**Reason:** This stack is lightweight, Python-based, suitable for LLM/fine-tuning work, and realistic for three students working under a 10-day development schedule.
+
+**Status:** DECIDED
 
 ---
 
