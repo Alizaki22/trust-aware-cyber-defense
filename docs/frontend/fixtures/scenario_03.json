@@ -1,0 +1,131 @@
+{
+  "scenario": "Ambiguous — agents disagree",
+  "event": {
+    "event_id": "evt-003",
+    "timestamp": "2026-09-22T23:48:10Z",
+    "event_type": "log_entry",
+    "source_ip": "192.0.2.88",
+    "destination_ip": null,
+    "destination_port": null,
+    "protocol": null,
+    "raw_content": "VPN login user=asha.m from 192.0.2.88 (new device, country=SG) MFA=passed",
+    "entity": "user:asha.m",
+    "metadata": {
+      "source": "SYNTHETIC"
+    }
+  },
+  "result": {
+    "run_id": "mock-run-003",
+    "event_id": "evt-003",
+    "phase": 1,
+    "model": "base-llm (TBD)",
+    "created_at": "2026-09-25T10:03:00",
+    "classification": "suspicious_login",
+    "verdict": "suspicious",
+    "confidence": "medium",
+    "confidence_value": 0.576,
+    "routing": "human_review",
+    "routing_reason": "Winning share 0.58 below threshold 0.6",
+    "simulated_action": null,
+    "agent_findings": [
+      {
+        "agent": "detection",
+        "event_id": "evt-003",
+        "classification": "suspicious_login",
+        "verdict": "suspicious",
+        "evidence": "New device and new country",
+        "confidence": "medium",
+        "reasoning": "Unusual login context",
+        "error": null
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-003",
+        "classification": "no_match",
+        "verdict": "unknown",
+        "evidence": "192.0.2.88 not found in IOC list",
+        "confidence": "none",
+        "reasoning": "No match found — this is NOT the same as benign",
+        "error": null
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-003",
+        "classification": "travel_consistent",
+        "verdict": "benign",
+        "evidence": "asha.m baseline includes monthly logins from SG; MFA passed",
+        "confidence": "medium",
+        "reasoning": "Within historical travel pattern",
+        "error": null
+      }
+    ],
+    "verification_results": [
+      {
+        "agent": "detection",
+        "event_id": "evt-003",
+        "status": "verified_consistent",
+        "reason": "New device and country present in raw_content"
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-003",
+        "status": "verified_consistent",
+        "reason": "No-match correctly reported"
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-003",
+        "status": "inconclusive",
+        "reason": "Baseline claim cannot be checked against the event alone"
+      }
+    ],
+    "trust_scores": [
+      {
+        "agent": "detection",
+        "event_id": "evt-003",
+        "historical_accuracy": 0.7,
+        "verification_score": 1.0,
+        "peer_agreement": 0.0,
+        "total_score": 0.63
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-003",
+        "historical_accuracy": 0.78,
+        "verification_score": 1.0,
+        "peer_agreement": 0.0,
+        "total_score": 0.662
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-003",
+        "historical_accuracy": 0.72,
+        "verification_score": 0.5,
+        "peer_agreement": 0.0,
+        "total_score": 0.463
+      }
+    ],
+    "trust_weighted": {
+      "method": "trust_weighted",
+      "verdict": "suspicious",
+      "verdict_weights": {
+        "suspicious": 0.63,
+        "benign": 0.463
+      },
+      "tie": false
+    },
+    "equal_weighted": {
+      "method": "equal_weighted",
+      "verdict": "unknown",
+      "verdict_weights": {
+        "suspicious": 1.0,
+        "benign": 1.0
+      },
+      "tie": true
+    },
+    "trust_changed_outcome": true,
+    "disagreement_summary": "detection: suspicious; intelligence: unknown; behavioral: benign",
+    "reasoning": "Trust-weighted verdict 'suspicious' (equal-weighted: 'unknown'). Winning share 0.58 below threshold 0.6.",
+    "is_mock": true
+  }
+}

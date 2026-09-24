@@ -1,0 +1,132 @@
+{
+  "scenario": "Clear attack — all agents agree",
+  "event": {
+    "event_id": "evt-001",
+    "timestamp": "2026-09-20T02:14:07Z",
+    "event_type": "log_entry",
+    "source_ip": "203.0.113.45",
+    "destination_ip": "10.0.0.12",
+    "destination_port": 22,
+    "protocol": "TCP",
+    "raw_content": "sshd[4121]: Failed password for root from 203.0.113.45 port 51234 ssh2 (x312 in 60s); Accepted password for root from 203.0.113.45",
+    "entity": "srv-web-01",
+    "metadata": {
+      "source": "SYNTHETIC"
+    }
+  },
+  "result": {
+    "run_id": "mock-run-001",
+    "event_id": "evt-001",
+    "phase": 1,
+    "model": "base-llm (TBD)",
+    "created_at": "2026-09-25T10:01:00",
+    "classification": "brute_force_login",
+    "verdict": "malicious",
+    "confidence": "high",
+    "confidence_value": 1.0,
+    "routing": "simulated_action",
+    "routing_reason": "Agreement share 1.00 ≥ 0.6",
+    "simulated_action": {
+      "description": "Would block 203.0.113.45 at the perimeter firewall and disable root SSH on srv-web-01",
+      "executed": false
+    },
+    "agent_findings": [
+      {
+        "agent": "detection",
+        "event_id": "evt-001",
+        "classification": "brute_force_login",
+        "verdict": "malicious",
+        "evidence": "312 failed root logins in 60s followed by an accepted login",
+        "confidence": "high",
+        "reasoning": "Classic SSH brute force pattern ending in success",
+        "error": null
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-001",
+        "classification": "known_bad_ip",
+        "verdict": "malicious",
+        "evidence": "203.0.113.45 present in local synthetic IOC list (ioc_ips.json)",
+        "confidence": "high",
+        "reasoning": "Source IP matches a known-bad indicator",
+        "error": null
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-001",
+        "classification": "anomalous_login",
+        "verdict": "malicious",
+        "evidence": "srv-web-01 baseline: 0 root logins/week, never from this /24",
+        "confidence": "high",
+        "reasoning": "Root login from never-seen network at 02:14",
+        "error": null
+      }
+    ],
+    "verification_results": [
+      {
+        "agent": "detection",
+        "event_id": "evt-001",
+        "status": "verified_consistent",
+        "reason": "Failure count and accept line present in raw_content"
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-001",
+        "status": "verified_consistent",
+        "reason": "Cited IP appears in event source_ip"
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-001",
+        "status": "verified_consistent",
+        "reason": "Entity and time match event fields"
+      }
+    ],
+    "trust_scores": [
+      {
+        "agent": "detection",
+        "event_id": "evt-001",
+        "historical_accuracy": 0.82,
+        "verification_score": 1.0,
+        "peer_agreement": 1.0,
+        "total_score": 0.928
+      },
+      {
+        "agent": "intelligence",
+        "event_id": "evt-001",
+        "historical_accuracy": 0.78,
+        "verification_score": 1.0,
+        "peer_agreement": 1.0,
+        "total_score": 0.912
+      },
+      {
+        "agent": "behavioral",
+        "event_id": "evt-001",
+        "historical_accuracy": 0.85,
+        "verification_score": 1.0,
+        "peer_agreement": 1.0,
+        "total_score": 0.94
+      }
+    ],
+    "trust_weighted": {
+      "method": "trust_weighted",
+      "verdict": "malicious",
+      "verdict_weights": {
+        "malicious": 2.78
+      },
+      "tie": false
+    },
+    "equal_weighted": {
+      "method": "equal_weighted",
+      "verdict": "malicious",
+      "verdict_weights": {
+        "malicious": 3.0
+      },
+      "tie": false
+    },
+    "trust_changed_outcome": false,
+    "disagreement_summary": null,
+    "reasoning": "Trust-weighted verdict 'malicious' (equal-weighted: 'malicious'). Agreement share 1.00 ≥ 0.6.",
+    "is_mock": true
+  }
+}
