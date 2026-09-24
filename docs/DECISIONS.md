@@ -8,18 +8,18 @@ This document records important decisions agreed upon by the team, and clearly m
 
 | ID | Decision | Status |
 |---|---|---|
-| D-000 | Final project title | DECIDED |
+| D-000 | Final project title | DECIDED BY TEAM AND AGREED BY MENTOR|
 | D-001 | Two-phase development (Phase 1 baseline, Phase 2 fine-tuned) | DECIDED |
 | D-002 | Four logical agent roles (Detection, Intelligence, Behavioral Analysis, Verification) | DECIDED |
-| D-003 | Conceptual trust model (historical accuracy, verification, peer agreement) | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-004 | Fine-tuning scoped to Phase 2 only | DECIDED |
-| D-005 | Phase 1 as literal baseline for Phase 2 comparison | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-006 | Student-friendly/simple architecture over enterprise infrastructure | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-007 | Technology stack (language, framework, base LLM, etc.) | DECIDED |
-| D-008 | Three-student task distribution | PROPOSED — REQUIRES TEAM APPROVAL |
-| D-009 | Git branching model (main / develop / feature branches) | PROPOSED — REQUIRES TEAM APPROVAL |
+| D-003 | Conceptual trust model (historical accuracy, verification, peer agreement) | DECIDED BY THE TEAM |
+| D-004 | Fine-tuning scoped to Phase 2 only | DECIDED BY THE TEAM |
+| D-005 | Phase 1 as literal baseline for Phase 2 comparison | DECIDED BY THE TEAM |
+| D-006 | Student-friendly/simple architecture over enterprise infrastructure | DECIDED BY THE TEAM |
+| D-007 | Technology stack (language, framework, base LLM, etc.) | DECIDED BY THE TEAM |
+| D-008 | Three-student task distribution | DECIDED BY THE TEAM |
+| D-009 | Git branching model (main / development / feature branches) | DECIDED BY THE TEAM |
 | D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
-| D-011 | All system actions are simulated, never real | DECIDED |
+| D-011 | All system actions are simulated, never real | DECIDED BY THE TEAM |
 
 ---
 
@@ -65,7 +65,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Consequences:** Trust values will need real tuning once the team has actual data to test against.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED BY THE TEAM
 
 ---
 
@@ -87,7 +87,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Consequences:** Any architecture change made in Phase 2 must also be considered for backporting to Phase 1, to keep the comparison fair.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED BY THE TEAM
 
 ---
 
@@ -95,7 +95,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Decision:** Prefer simple Python modules, simple APIs, and small numbers of agents over distributed/enterprise infrastructure, unless a specific educational reason is documented.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED BY THE TEAM
 
 ---
 
@@ -128,17 +128,47 @@ This document records important decisions agreed upon by the team, and clearly m
 
 ### D-008 — Three-Student Task Distribution
 
-**Decision:** Not finalized. A starting proposal (Student 1: Team Lead/Architecture/LLM/Trust/Integration; Student 2: Cybersecurity Research/Dataset/Evaluation; Student 3: Agents/Backend/APIs/Testing) has been suggested but not approved.
+**Decision:** The project responsibilities are divided into three primary workstreams:
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+| Team Member | Primary Responsibilities |
+|---|---|
+| **Student 1 — Team Lead / Architecture & Repository** | Project documentation (`.md` files), system architecture, Git/GitHub repository management, project coordination, dataset coordination, and integration oversight |
+| **Student 2 — AI/ML & Model Development** | Dataset preparation, model development, fine-tuning, training, experimentation, and model evaluation/testing |
+| **Student 3 — Frontend & Product** | Frontend development, UI/UX, results visualization, system testing support, reports, and presentation/demo preparation |
 
+This division creates three complementary workstreams:
+
+1. **Project, Architecture & Repository**
+   - Project documentation
+   - System architecture
+   - Dataset coordination
+   - Git/GitHub repository management
+   - Team coordination and integration
+
+2. **AI/ML & Model Development**
+   - Dataset preparation
+   - Model development
+   - Fine-tuning
+   - Training and experimentation
+   - Model evaluation and testing
+
+3. **Frontend & Product**
+   - Frontend development
+   - UI/UX
+   - Results visualization
+   - Testing support
+   - Reports and presentation/demo preparation
+
+The responsibilities may be adjusted when necessary based on project requirements, workload, or technical dependencies. Any significant change to the agreed task distribution should be communicated to the team and recorded when appropriate.
+
+**Status:** DECIDED BY THE TEAM
 ---
 
 ### D-009 — Git Branching Model
 
-**Decision:** `main` = stable branch, `develop` = integration branch, feature/docs/research/fix/experiment branches feed into `develop` via PR, then `develop` feeds `main` via PR. No direct pushes or merges to `main`.
+**Decision:** `main` = stable branch, `development` = integration branch, feature/docs/research/fix/experiment branches feed into `development` via PR, then `development` feeds `main` via PR. No direct pushes or merges to `main`.
 
-**Status:** PROPOSED — REQUIRES TEAM APPROVAL
+**Status:** DECIDED BY THE TEAM
 
 ---
 
