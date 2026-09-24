@@ -16,7 +16,7 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-005 | Phase 1 as literal baseline for Phase 2 comparison | DECIDED BY THE TEAM |
 | D-006 | Student-friendly/simple architecture over enterprise infrastructure | DECIDED BY THE TEAM |
 | D-007 | Technology stack (language, framework, base LLM, etc.) | DECIDED BY THE TEAM |
-| D-008 | Three-student task distribution | DECIDED BY THE TEAM |
+| D-008 | Three-student task distribution | DECIDED BY THE TEAM AND APPROVED BY THE MENTOR |
 | D-009 | Git branching model (main / development / feature branches) | DECIDED BY THE TEAM |
 | D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
 | D-011 | All system actions are simulated, never real | DECIDED BY THE TEAM |
@@ -164,7 +164,8 @@ This division creates three complementary workstreams:
 
 The responsibilities may be adjusted when necessary based on project requirements, workload, or technical dependencies. Any significant change to the agreed task distribution should be communicated to the team and recorded when appropriate.
 
-**Status:** DECIDED BY THE TEAM
+**Status:** DECIDED BY THE TEAM AND APPROVED BY THE MENTOR
+
 ---
 
 ### D-009 — Git Branching Model
