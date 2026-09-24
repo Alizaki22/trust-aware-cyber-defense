@@ -61,14 +61,28 @@ This is a defensive, academic project. The system only ever recommends or simula
 docs/
   PROJECT_SCOPE.md
   ARCHITECTURE.md
+  SYSTEM_ARCHITECTURE.md
   DECISIONS.md
   RESEARCH.md
   THREAT_MODEL.md
+  AGENT_DESIGN.md
+  API_REFERENCE.md
+  DATASET.md
+  DEVELOPMENT_GUIDE.md
+  EXPERIMENTS.md
+  LLM_FINE_TUNING.md
+  TESTING.md
   architecture/
     AGENT_SPECIFICATION.md
     TRUST_MODEL.md
     DATA_FLOW.md
+.github/
+  PULL_REQUEST_TEMPLATE.md
+  ISSUE_TEMPLATE/ISSUE_TEMPLATE.md
 AGENTS.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
 README.md
 ```
 
@@ -77,19 +91,30 @@ Application source code does not exist yet — the current state of the project 
 ## Documentation
 
 - [`docs/PROJECT_SCOPE.md`](docs/PROJECT_SCOPE.md) — problem, goals, phases, scope
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design and components
-- [`docs/architecture/AGENT_SPECIFICATION.md`](docs/architecture/AGENT_SPECIFICATION.md) — per-agent detail
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — conceptual system design and components
+- [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) — implementation-level architecture, tech stack, project structure
+- [`docs/architecture/AGENT_SPECIFICATION.md`](docs/architecture/AGENT_SPECIFICATION.md) — per-agent role detail
+- [`docs/AGENT_DESIGN.md`](docs/AGENT_DESIGN.md) — agent implementation design (base class, prompting, error handling)
 - [`docs/architecture/TRUST_MODEL.md`](docs/architecture/TRUST_MODEL.md) — trust mechanism
 - [`docs/architecture/DATA_FLOW.md`](docs/architecture/DATA_FLOW.md) — data flow through the system
+- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) — internal API/data model reference
+- [`docs/DATASET.md`](docs/DATASET.md) — dataset candidates and licensing requirements
+- [`docs/LLM_FINE_TUNING.md`](docs/LLM_FINE_TUNING.md) — Phase 2 fine-tuning approach
+- [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md) — local setup and development workflow
+- [`docs/TESTING.md`](docs/TESTING.md) — testing strategy
+- [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) — evaluation experiments and results tracking
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — decision log
 - [`docs/RESEARCH.md`](docs/RESEARCH.md) — research foundation
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — threats and mitigations
 - [`AGENTS.md`](AGENTS.md) — instructions for AI coding agents working in this repo
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and Git workflow guide
+- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — community standards
+- [`SECURITY.md`](SECURITY.md) — security policy and reporting
 
 ## Project Status
 
-📄 Documentation foundation stage. No application code has been written yet. See `docs/DECISIONS.md` for decisions still requiring team approval before implementation begins.
+📄 Documentation foundation stage — decisions finalized (see `docs/DECISIONS.md`). No application code has been written yet; Phase 1 implementation is the next step. Two items remain genuinely open and tracked in `docs/DECISIONS.md`: which agent(s) receive the fine-tuned model in Phase 2 (D-010), and the project license (D-012).
 
 ## Team
 
-Three students. See `docs/DECISIONS.md` (D-008) for the proposed (not yet approved) task distribution.
+Three students. See `docs/DECISIONS.md` (D-008) for the agreed task distribution.

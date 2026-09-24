@@ -31,7 +31,7 @@ Specialized agents (Detection, Intelligence, Behavioral Analysis, Verification) 
 
 ## Team
 
-Three students. Task distribution is proposed in `DECISIONS.md` and is not final until the team approves it. All members are expected to understand the complete system, not only their assigned area.
+Three students. Task distribution is documented in `DECISIONS.md` (D-008). All members are expected to understand the complete system, not only their assigned area.
 
 ## Two-Phase Development
 

@@ -18,8 +18,8 @@ This is a **university semester project** developed by three students. Contribut
 We follow the branching model described in `docs/DECISIONS.md` (D-009):
 
 - **`main`** — Stable branch. No direct pushes or merges.
-- **`develop`** — Integration branch. All feature work merges here first.
-- **Feature branches** — Created from `develop` for each task.
+- **`development`** — Integration branch. All feature work merges here first.
+- **Feature branches** — Created from `development` for each task.
 
 ### Branch Naming
 
@@ -35,10 +35,10 @@ Use descriptive branch names following these conventions:
 
 ### Pull Request Process
 
-1. Create a feature branch from `develop`.
+1. Create a feature branch from `development`.
 2. Make your changes in small, focused commits.
 3. Write descriptive commit messages (see Commit Messages below).
-4. Open a Pull Request targeting `develop`.
+4. Open a Pull Request targeting `development`.
 5. Fill in the PR template (`.github/PULL_REQUEST_TEMPLATE.md`).
 6. Wait for at least one team member to review.
 7. Address review feedback.

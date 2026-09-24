@@ -174,5 +174,5 @@ Results will be added here as experiments are conducted. No results are assumed 
 - `docs/RESEARCH.md` — Research questions and evaluation methodology
 - `docs/TESTING.md` — Testing strategy and scenario-based tests
 - `docs/DATASET.md` — Datasets used in experiments
-- `docs/TRUST_MODEL.md` — Trust model being evaluated
+- `docs/architecture/TRUST_MODEL.md` — Trust model being evaluated
 - `docs/LLM_FINE_TUNING.md` — Fine-tuning approach being compared
