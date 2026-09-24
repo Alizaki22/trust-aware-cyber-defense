@@ -23,7 +23,7 @@ Before performing any implementation task, an AI agent must:
 5. Read `docs/RESEARCH.md`.
 6. Read `docs/THREAT_MODEL.md`.
 7. Read this file, `AGENTS.md`.
-8. Read all relevant documentation under `docs/architecture/`, `docs/decisions/`, and `docs/research/`.
+8. Read all relevant documentation under `docs/architecture/`, along with `docs/DECISIONS.md` and `docs/RESEARCH.md` and any other files in `docs/`.
 9. Inspect relevant existing source code.
 10. Inspect relevant existing tests.
 11. Understand how the requested task fits into the existing project.
@@ -68,8 +68,8 @@ If an AI agent believes a different architecture or approach would be better, it
 
 ## Git Workflow
 
-- Stable branch: `main`. Integration branch: `develop`.
-- Normal flow: `feature/docs/research branch → Pull Request → develop → testing → Pull Request → main`.
+- Stable branch: `main`. Integration branch: `development`.
+- Normal flow: `feature/docs/research branch → Pull Request → development → testing → Pull Request → main`.
 - **No AI agent may push directly to `main` or merge directly into `main`.**
 - Branch naming should clearly describe purpose, e.g. `feature/detection-agent`, `docs/architecture`, `research/dataset`, `fix/...`, `experiment/...`.
 - Commits must be small, focused, and descriptively named (e.g., `feat: implement detection agent`, `docs: update trust model`) — not vague messages like "stuff" or "updates."

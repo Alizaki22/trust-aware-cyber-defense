@@ -113,9 +113,9 @@ Key directories:
 ### 2. Create a Branch
 
 ```bash
-# Make sure you're on develop and up to date
-git checkout develop
-git pull origin develop
+# Make sure you're on development and up to date
+git checkout development
+git pull origin development
 
 # Create a feature branch
 git checkout -b feature/your-feature-name
@@ -165,7 +165,7 @@ Follow the commit message conventions in `CONTRIBUTING.md`.
 git push origin feature/your-feature-name
 ```
 
-Then create a Pull Request on GitHub targeting `develop`. Fill in the PR template.
+Then create a Pull Request on GitHub targeting `development`. Fill in the PR template.
 
 ### 7. Review and Merge
 
@@ -242,14 +242,14 @@ python -m src.main --event data/events/sample_event.json --adapter-path ./models
 
 ```mermaid
 flowchart LR
-    A["feature branch"] -->|PR| B["develop"]
+    A["feature branch"] -->|PR| B["development"]
     B -->|Testing| B
     B -->|PR| C["main"]
 ```
 
 - **Never push directly to `main`.**
 - **Never merge directly into `main`.**
-- All work goes through `develop` first.
+- All work goes through `development` first.
 
 See `docs/DECISIONS.md` (D-009) for the full branching model.
 
@@ -270,11 +270,11 @@ git diff
 git stash
 git stash pop
 
-# Update your branch from develop
-git checkout develop
-git pull origin develop
+# Update your branch from development
+git checkout development
+git pull origin development
 git checkout feature/your-feature
-git merge develop
+git merge development
 ```
 
 ## Troubleshooting
@@ -286,7 +286,7 @@ git merge develop
 | `ModuleNotFoundError` | Make sure the virtual environment is activated and dependencies are installed |
 | LLM API timeout | Check your API key and network connection; the provider may be rate-limiting |
 | Test failures after pull | Run `pip install -r requirements.txt` to pick up new dependencies |
-| Merge conflicts | Sync your branch with `develop` regularly |
+| Merge conflicts | Sync your branch with `development` regularly |
 | GPU not detected (Phase 2) | Check CUDA installation and driver version |
 
 ## Related Documentation

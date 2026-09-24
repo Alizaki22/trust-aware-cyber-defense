@@ -8,7 +8,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 | ID | Decision | Status |
 |---|---|---|
-| D-000 | Final project title | DECIDED BY TEAM AND AGREED BY MENTOR|
+| D-000 | Final project title | DECIDED BY TEAM AND AGREED BY MENTOR |
 | D-001 | Two-phase development (Phase 1 baseline, Phase 2 fine-tuned) | DECIDED |
 | D-002 | Four logical agent roles (Detection, Intelligence, Behavioral Analysis, Verification) | DECIDED |
 | D-003 | Conceptual trust model (historical accuracy, verification, peer agreement) | DECIDED BY THE TEAM |
@@ -20,6 +20,7 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-009 | Git branching model (main / development / feature branches) | DECIDED BY THE TEAM |
 | D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
 | D-011 | All system actions are simulated, never real | DECIDED BY THE TEAM |
+| D-012 | Project license | NOT YET DECIDED |
 
 ---
 
@@ -122,6 +123,8 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Reason:** This stack is lightweight, Python-based, suitable for LLM/fine-tuning work, and realistic for three students working under a 10-day development schedule.
 
+**Action item (not a decision change):** Using the OpenAI SDK for Phase 1 requires a funded API key with real per-call cost. The team should confirm who provides/pays for this key (or decide to point the same client at a free/local OpenAI-compatible endpoint instead) before Phase 1 implementation begins — this blocks the very first agent-integration task.
+
 **Status:** DECIDED
 
 ---
@@ -189,3 +192,11 @@ The responsibilities may be adjusted when necessary based on project requirement
 **Context:** This is a defensive, academic project; real automated response capability is out of scope and a safety/liability risk for a student project.
 
 **Status:** DECIDED
+
+---
+
+### D-012 — Project License
+
+**Decision:** Not yet made. No license has been chosen or added to the repository, though it is public.
+
+**Status:** NOT YET DECIDED
