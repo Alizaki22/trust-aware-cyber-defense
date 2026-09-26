@@ -27,15 +27,36 @@ def resolve_dataset_paths(
     train_path = Path(train_file) if train_file else TRAIN_FILE
     test_path = Path(test_file) if test_file else TEST_FILE
 
-    if train_path.exists() and test_path.exists():
+    train_exists = train_path.exists() and train_path.stat().st_size > 0
+    test_exists = test_path is not None and test_path.exists() and test_path.stat().st_size > 0
+
+    if train_exists and test_exists:
         return train_path, test_path
 
     if train_file is None and test_file is None and DEMO_FILE.exists():
         print(
-            "UNSW-NB15 files were not found. Falling back to the available demo dataset: "
+            "UNSW-NB15 files were not found or are empty. Falling back to the available demo dataset: "
             f"{DEMO_FILE}"
         )
         return DEMO_FILE, None
+
+    if not train_exists:
+        if DEMO_FILE.exists() and train_file is None and test_file is None:
+            print(
+                "UNSW-NB15 files were not found or are empty. Falling back to the available demo dataset: "
+                f"{DEMO_FILE}"
+            )
+            return DEMO_FILE, None
+        raise FileNotFoundError(f"Training dataset not found:\n{train_path}")
+
+    if test_path is not None and not test_exists:
+        if DEMO_FILE.exists() and train_file is None and test_file is None:
+            print(
+                "UNSW-NB15 files were not found or are empty. Falling back to the available demo dataset: "
+                f"{DEMO_FILE}"
+            )
+            return DEMO_FILE, None
+        raise FileNotFoundError(f"Testing dataset not found:\n{test_path}")
 
     if not train_path.exists():
         raise FileNotFoundError(f"Training dataset not found:\n{train_path}")

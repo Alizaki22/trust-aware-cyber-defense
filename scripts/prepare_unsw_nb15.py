@@ -1,51 +1,139 @@
 from pathlib import Path
 import json
 
-import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
+
+# ============================================================
+# PROJECT PATHS
+# ============================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-RAW_DIR = PROJECT_ROOT / "data" / "raw"
-UNSW_DIR = RAW_DIR / "unsw_nb15"
-DEMO_FILE = RAW_DIR / "demo_dataset.csv"
+RAW_DIR = PROJECT_ROOT / "data" / "raw" / "unsw_nb15"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "splits"
 
-TRAIN_FILE = UNSW_DIR / "UNSW_NB15_training-set.csv"
-TEST_FILE = UNSW_DIR / "UNSW_NB15_testing-set.csv"
+TRAIN_FILE = RAW_DIR / "UNSW_NB15_training-set.csv"
+TEST_FILE = RAW_DIR / "UNSW_NB15_testing-set.csv"
 
 
+# Reproducibility
 RANDOM_STATE = 42
 
 
-def load_dataset_inputs():
-    """Load UNSW files when available, otherwise fall back to the repo demo data."""
-    if TRAIN_FILE.exists() and TEST_FILE.exists():
-        train_df = pd.read_csv(TRAIN_FILE)
-        test_df = pd.read_csv(TEST_FILE)
-        return train_df, test_df
+# ============================================================
+# EXPECTED DATASET STRUCTURE
+# ============================================================
 
-    if DEMO_FILE.exists():
-        print(
-            "UNSW-NB15 raw files were not found. Falling back to the repository demo dataset: "
-            f"{DEMO_FILE}"
+REQUIRED_COLUMNS = [
+    "id",
+    "dur",
+    "proto",
+    "service",
+    "state",
+    "spkts",
+    "dpkts",
+    "sbytes",
+    "dbytes",
+    "rate",
+    "sttl",
+    "dttl",
+    "sload",
+    "dload",
+    "sloss",
+    "dloss",
+    "sinpkt",
+    "dinpkt",
+    "sjit",
+    "djit",
+    "swin",
+    "stcpb",
+    "dtcpb",
+    "dwin",
+    "tcprtt",
+    "synack",
+    "ackdat",
+    "smean",
+    "dmean",
+    "trans_depth",
+    "response_body_len",
+    "ct_srv_src",
+    "ct_state_ttl",
+    "ct_dst_ltm",
+    "ct_src_dport_ltm",
+    "ct_dst_sport_ltm",
+    "ct_dst_src_ltm",
+    "is_ftp_login",
+    "ct_ftp_cmd",
+    "ct_flw_http_mthd",
+    "ct_src_ltm",
+    "ct_srv_dst",
+    "is_sm_ips_ports",
+    "attack_cat",
+    "label",
+]
+
+
+# ============================================================
+# LOAD
+# ============================================================
+
+def load_dataset(path: Path) -> pd.DataFrame:
+
+    print(f"\nLoading: {path.name}")
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {path}"
         )
-        demo_df = pd.read_csv(DEMO_FILE)
-        return demo_df.copy(), demo_df.copy()
 
-    raise FileNotFoundError(
-        "Missing UNSW-NB15 files and no demo dataset was found. "
-        f"Expected: {TRAIN_FILE} and {TEST_FILE}"
-    )
+    if path.stat().st_size == 0:
+        raise ValueError(
+            f"Dataset is empty: {path}"
+        )
+
+    df = pd.read_csv(path)
+
+    print(f"Rows: {len(df)}")
+    print(f"Columns: {len(df.columns)}")
+
+    return df
 
 
-def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+# ============================================================
+# SCHEMA VALIDATION
+# ============================================================
 
-    print("Cleaning dataset...")
+def validate_schema(df: pd.DataFrame):
 
-    # Clean column names
+    print("\nValidating schema...")
+
+    missing_columns = [
+        column
+        for column in REQUIRED_COLUMNS
+        if column not in df.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            "Missing required columns:\n"
+            + "\n".join(missing_columns)
+        )
+
+    print("Schema validation: PASSED")
+
+
+# ============================================================
+# CLEANING
+# ============================================================
+
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+
+    print("\nCleaning dataset...")
+
+    initial_rows = len(df)
+
+    # Normalize column names
     df.columns = [
         str(column).strip()
         for column in df.columns
@@ -54,96 +142,170 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Remove completely empty rows
     df = df.dropna(how="all")
 
-    # Replace infinity values
-    df = df.replace(
-        [np.inf, -np.inf],
-        np.nan
-    )
-
     # Remove duplicate records
-    df = df.drop_duplicates()
+    duplicates = df.duplicated().sum()
 
-    return df
-
-
-def clean_labels(df: pd.DataFrame) -> pd.DataFrame:
-
-    if "label" not in df.columns:
-        raise ValueError("Required column 'label' was not found.")
-
-    label_mapping = {
-        "normal": 0,
-        "benign": 0,
-        "safe": 0,
-        "0": 0,
-        "false": 0,
-        "malicious": 1,
-        "attack": 1,
-        "anomaly": 1,
-        "1": 1,
-        "true": 1,
-    }
-
-    normalized_label = df["label"].astype(str).str.strip().str.lower()
-    numeric_label = normalized_label.map(label_mapping)
-
-    if numeric_label.isna().any():
-        fallback_numeric = pd.to_numeric(df["label"], errors="coerce")
-        numeric_label = numeric_label.fillna(fallback_numeric)
-
-    df["label"] = numeric_label
-
-    # Remove rows with invalid labels
-    df = df.dropna(subset=["label"])
-    df["label"] = df["label"].astype(int)
-
-    if "attack_cat" not in df.columns:
-        df["attack_cat"] = np.where(
-            df["label"].astype(int) == 1,
-            "Malicious",
-            "Normal",
-        )
+    if duplicates:
+        print(f"Removing duplicates: {duplicates}")
+        df = df.drop_duplicates()
     else:
-        df["attack_cat"] = (
-            df["attack_cat"]
-            .fillna("Normal")
+        print("Duplicates: 0")
+
+    # Normalize categorical strings
+    for column in [
+        "proto",
+        "service",
+        "state",
+        "attack_cat",
+    ]:
+
+        df[column] = (
+            df[column]
             .astype(str)
             .str.strip()
         )
 
+    # Normalize label
+    df["label"] = pd.to_numeric(
+        df["label"],
+        errors="coerce"
+    )
+
+    # Remove records with invalid labels
+    invalid_labels = df["label"].isna().sum()
+
+    if invalid_labels:
+        print(
+            f"Removing invalid labels: "
+            f"{invalid_labels}"
+        )
+
+        df = df.dropna(
+            subset=["label"]
+        )
+
+    df["label"] = df["label"].astype(int)
+
+    # Check allowed binary labels
+    invalid_binary = ~df["label"].isin([0, 1])
+
+    if invalid_binary.any():
+
+        count = invalid_binary.sum()
+
+        raise ValueError(
+            f"Found {count} records with "
+            "invalid binary labels."
+        )
+
+    print(
+        f"Rows before cleaning: {initial_rows}"
+    )
+
+    print(
+        f"Rows after cleaning:  {len(df)}"
+    )
+
     return df
 
 
-def print_statistics(
-    name: str,
-    df: pd.DataFrame
-):
+# ============================================================
+# LABEL VALIDATION
+# ============================================================
 
-    print("\n" + "=" * 60)
-    print(name)
-    print("=" * 60)
+def validate_labels(df: pd.DataFrame):
 
-    print(f"Rows: {len(df)}")
+    print("\nValidating labels...")
 
-    print("\nBinary label:")
+    print("\nBinary label distribution:")
+
     print(
         df["label"]
         .value_counts()
         .sort_index()
     )
 
-    if "attack_cat" in df.columns:
-        print("\nAttack categories:")
-        print(
-            df["attack_cat"]
-            .value_counts()
-        )
+    print("\nAttack category distribution:")
 
+    print(
+        df["attack_cat"]
+        .value_counts()
+    )
+
+    # Check normal records
+    normal_categories = df.loc[
+        df["label"] == 0,
+        "attack_cat"
+    ].unique()
+
+    print(
+        "\nCategories found for label=0:"
+    )
+
+    print(normal_categories)
+
+    print("\nLabel validation: PASSED")
+
+
+# ============================================================
+# TRAIN / VALIDATION SPLIT
+# ============================================================
+
+def create_splits(
+    training_df: pd.DataFrame,
+    testing_df: pd.DataFrame,
+):
+
+    print("\nCreating train/validation/test splits...")
+
+    # The official UNSW-NB15 training set becomes:
+    #
+    # 90% -> train
+    # 10% -> validation
+    #
+    # The official UNSW-NB15 testing set remains:
+    #
+    # 100% -> test
+
+    train_df = training_df.sample(
+        frac=0.90,
+        random_state=RANDOM_STATE
+    )
+
+    validation_df = training_df.drop(
+        train_df.index
+    )
+
+    test_df = testing_df.copy()
+
+    print(
+        f"Training:   {len(train_df)}"
+    )
+
+    print(
+        f"Validation: {len(validation_df)}"
+    )
+
+    print(
+        f"Test:       {len(test_df)}"
+    )
+
+    return (
+        train_df.reset_index(drop=True),
+        validation_df.reset_index(drop=True),
+        test_df.reset_index(drop=True),
+    )
+
+
+# ============================================================
+# DETECTION AGENT INPUT
+# ============================================================
 
 def create_detection_input(
     row: pd.Series
 ) -> str:
 
+    # These are targets, not model input.
     excluded = {
         "label",
         "attack_cat",
@@ -156,19 +318,19 @@ def create_detection_input(
         if column in excluded:
             continue
 
-        if pd.isna(value):
-            value = "unknown"
-
         fields.append(
             f"{column}={value}"
         )
 
     return (
-        "Analyze the following network "
-        "security event:\n"
+        "Analyze this network security event:\n"
         + ", ".join(fields)
     )
 
+
+# ============================================================
+# DETECTION AGENT JSONL
+# ============================================================
 
 def create_instruction_example(
     row: pd.Series
@@ -178,32 +340,44 @@ def create_instruction_example(
         row
     )
 
-    attack_category = (
-        str(row["attack_cat"]) if "attack_cat" in row.index else "Normal"
-    )
+    # For the dataset ground truth:
+    #
+    # label = 0 -> Normal
+    # label = 1 -> Attack
+    #
+    # attack_cat provides the attack category.
 
-    label = int(row["label"])
+    if int(row["label"]) == 0:
+        classification = "Normal"
+    else:
+        classification = str(
+            row["attack_cat"]
+        )
 
     return {
         "instruction": (
             "You are the Detection Agent. "
             "Analyze the network security event "
-            "and classify whether it is normal or "
-            "malicious. If malicious, identify the "
-            "attack category."
+            "and determine whether it is normal "
+            "or malicious. If malicious, identify "
+            "the attack category."
         ),
 
         "input": detection_input,
 
         "output": json.dumps(
             {
-                "classification": attack_category,
-                "label": label
+                "classification": classification,
+                "label": int(row["label"])
             },
             ensure_ascii=False
-        )
+        ),
     }
 
+
+# ============================================================
+# SAVE JSONL
+# ============================================================
 
 def save_jsonl(
     df: pd.DataFrame,
@@ -211,6 +385,10 @@ def save_jsonl(
 ):
 
     output_file = OUTPUT_DIR / filename
+
+    print(
+        f"\nCreating {filename}..."
+    )
 
     with output_file.open(
         "w",
@@ -232,109 +410,134 @@ def save_jsonl(
             )
 
     print(
-        f"Saved {len(df)} examples -> "
-        f"{output_file}"
+        f"Saved {len(df)} examples."
     )
 
 
+# ============================================================
+# SAVE CSV
+# ============================================================
+
+def save_csv(
+    df: pd.DataFrame,
+    filename: str
+):
+
+    output_file = OUTPUT_DIR / filename
+
+    df.to_csv(
+        output_file,
+        index=False
+    )
+
+    print(
+        f"Saved {filename}: "
+        f"{len(df)} rows"
+    )
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
 def main():
+
+    print("=" * 70)
+    print("UNSW-NB15 DETECTION DATASET PREPARATION")
+    print("=" * 70)
 
     OUTPUT_DIR.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    print("Loading dataset...")
-    official_train, official_test = load_dataset_inputs()
+    # --------------------------------------------------------
+    # Load
+    # --------------------------------------------------------
 
-    print_statistics(
-        "RAW TRAINING DATA",
-        official_train
+    training_df = load_dataset(
+        TRAIN_FILE
     )
 
-    print_statistics(
-        "RAW TEST DATA",
-        official_test
+    testing_df = load_dataset(
+        TEST_FILE
     )
 
+    # --------------------------------------------------------
+    # Validate schema
+    # --------------------------------------------------------
+
+    validate_schema(
+        training_df
+    )
+
+    validate_schema(
+        testing_df
+    )
+
+    # --------------------------------------------------------
     # Clean
-    official_train = clean_dataframe(
-        official_train
+    # --------------------------------------------------------
+
+    training_df = clean_dataset(
+        training_df
     )
 
-    official_test = clean_dataframe(
-        official_test
+    testing_df = clean_dataset(
+        testing_df
     )
 
-    # Clean labels
-    official_train = clean_labels(
-        official_train
+    # --------------------------------------------------------
+    # Validate labels
+    # --------------------------------------------------------
+
+    validate_labels(
+        training_df
     )
 
-    official_test = clean_labels(
-        official_test
+    validate_labels(
+        testing_df
     )
 
-    print_statistics(
-        "CLEANED TRAINING DATA",
-        official_train
+    # --------------------------------------------------------
+    # Create splits
+    # --------------------------------------------------------
+
+    (
+        train_df,
+        validation_df,
+        test_df,
+    ) = create_splits(
+        training_df,
+        testing_df
     )
 
-    print_statistics(
-        "CLEANED TEST DATA",
-        official_test
+    # --------------------------------------------------------
+    # Save CSV datasets
+    # --------------------------------------------------------
+
+    print("\nSaving processed CSV files...")
+
+    save_csv(
+        train_df,
+        "train.csv"
     )
 
-    # -----------------------------------------------------
-    # Create validation set from training data
-    # -----------------------------------------------------
-
-    train_df, validation_df = train_test_split(
-        official_train,
-        test_size=0.10,
-        random_state=RANDOM_STATE,
-        stratify=official_train["label"]
+    save_csv(
+        validation_df,
+        "validation.csv"
     )
 
-    test_df = official_test.copy()
-
-    print_statistics(
-        "FINAL TRAIN",
-        train_df
+    save_csv(
+        test_df,
+        "test.csv"
     )
 
-    print_statistics(
-        "FINAL VALIDATION",
-        validation_df
-    )
+    # --------------------------------------------------------
+    # Save Detection Agent JSONL
+    # --------------------------------------------------------
 
-    print_statistics(
-        "FINAL TEST",
-        test_df
-    )
-
-    # -----------------------------------------------------
-    # Save CSV files
-    # -----------------------------------------------------
-
-    train_df.to_csv(
-        OUTPUT_DIR / "train.csv",
-        index=False
-    )
-
-    validation_df.to_csv(
-        OUTPUT_DIR / "validation.csv",
-        index=False
-    )
-
-    test_df.to_csv(
-        OUTPUT_DIR / "test.csv",
-        index=False
-    )
-
-    # -----------------------------------------------------
-    # Save JSONL instruction datasets
-    # -----------------------------------------------------
+    print("\nCreating Detection Agent datasets...")
 
     save_jsonl(
         train_df,
@@ -351,7 +554,24 @@ def main():
         "test.jsonl"
     )
 
-    print("\nDataset preparation complete.")
+    # --------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------
+
+    print("\n" + "=" * 70)
+    print("DAY 2 DATASET PREPARATION COMPLETE")
+    print("=" * 70)
+
+    print("\nOutput files:")
+
+    for file in sorted(
+        OUTPUT_DIR.iterdir()
+    ):
+
+        print(
+            f"  {file.name} "
+            f"({file.stat().st_size:,} bytes)"
+        )
 
 
 if __name__ == "__main__":
