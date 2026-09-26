@@ -70,10 +70,12 @@ If an AI agent believes a different architecture or approach would be better, it
 
 - Stable branch: `main`. Integration branch: `development`.
 - Normal flow: `feature/docs/research branch → Pull Request → development → testing → Pull Request → main`.
-- **No AI agent may push directly to `main` or merge directly into `main`.**
+- **No AI agent may push directly to `main` or `development`, and no AI agent may merge directly into either.** All work happens on the assigned feature/docs/research branch and reaches `development` only through a reviewed Pull Request.
+- **An AI agent must stay on the human team member's assigned branch for the task at hand.** Do not create, switch to, or push to a branch assigned to a different team member without being explicitly asked to.
 - Branch naming should clearly describe purpose, e.g. `feature/detection-agent`, `docs/architecture`, `research/dataset`, `fix/...`, `experiment/...`.
 - Commits must be small, focused, and descriptively named (e.g., `feat: implement detection agent`, `docs: update trust model`) — not vague messages like "stuff" or "updates."
 - AI agents must not create commits claiming work that was not actually performed.
+- **Git identity:** every commit must be authored under the human team member's own configured Git name and email, never as "Claude," "Codex," "Copilot," "Gemini," or any other AI/tool identity. If the local Git identity is not already configured correctly, the AI agent must stop and ask the team member for their name and email rather than guessing or leaving it as a generic default.
 
 ## Scope Control
 
