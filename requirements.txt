@@ -1,0 +1,10 @@
+# Phase 1 runtime + tests (versions used to produce and test this baseline)
+pydantic==2.13.5
+pandas==3.0.2
+openai==3.19.2
+streamlit==1.64.0
+pytest==9.1.1
+# Model serving is external (not a Python dependency of this repo):
+#   vLLM:   vllm serve Qwen/Qwen3-4B-Instruct-2507        (OpenAI-compatible, port 8000)
+#   Ollama: ollama run hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M   (port 11434)
+# Phase 2 (fine-tuning) adds transformers / peft / bitsandbytes / trl -- not needed for Phase 1.
