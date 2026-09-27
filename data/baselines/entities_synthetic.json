@@ -1,0 +1,13 @@
+{
+  "source": "SYNTHETIC per-entity baselines for demo scenarios - invented values, not measured behaviour",
+  "entities": {
+    "srv-web-01": {
+      "numeric": {"dur": [0.0, 5.0], "spkts": [1, 60], "dpkts": [0, 60], "sbytes": [40, 20000], "dbytes": [0, 200000]},
+      "sets": {"state": ["FIN", "CON"], "sttl": ["31", "62"], "dttl": ["29", "252"]}
+    },
+    "laptop-fin-07": {
+      "numeric": {"dur": [0.0, 30.0], "spkts": [1, 200], "dpkts": [0, 200], "sbytes": [40, 50000], "dbytes": [0, 2000000]},
+      "sets": {"state": ["FIN", "CON"], "sttl": ["31", "62"], "dttl": ["29", "252"]}
+    }
+  }
+}

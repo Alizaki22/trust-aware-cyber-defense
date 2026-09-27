@@ -1,0 +1,15 @@
+{
+  "source": "SYNTHETIC local IOC list (data/threat_intel/ioc_synthetic.json) - not a real threat feed",
+  "note": "All indicators are invented. IPs use RFC 5737 documentation ranges only.",
+  "ips": {
+    "203.0.113.45": {"threat": "simulated SSH brute-force source"},
+    "203.0.113.77": {"threat": "simulated botnet C2 server"},
+    "198.51.100.23": {"threat": "simulated exfiltration drop host"}
+  },
+  "domains": {
+    "update-check.invalid": {"threat": "simulated malware beacon domain"}
+  },
+  "hashes": {
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": {"threat": "simulated dropper (placeholder hash)"}
+  }
+}
