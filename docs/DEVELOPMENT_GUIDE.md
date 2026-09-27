@@ -24,7 +24,7 @@ This guide covers everything a team member needs to set up, develop, and contrib
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<org>/trust-aware-cyber-defense.git
+git clone https://github.com/Alizaki22/trust-aware-cyber-defense.git
 cd trust-aware-cyber-defense
 ```
 
@@ -47,8 +47,10 @@ source venv/bin/activate
 # Install project dependencies
 pip install -r requirements.txt
 
-# For development (includes testing tools)
-pip install -r requirements-dev.txt
+# requirements-dev.txt (testing/linting tools) does not exist yet — it will be
+# added once the src/ skeleton is implemented (see SYSTEM_ARCHITECTURE.md).
+# For now, install pytest directly if you need to run tests:
+pip install pytest
 ```
 
 ### 4. Configure Environment Variables
@@ -60,7 +62,7 @@ Create a `.env` file in the project root (this file is gitignored):
 
 # LLM API Configuration
 LLM_API_KEY=your-api-key-here
-LLM_MODEL=gpt-3.5-turbo  # or whichever base model the team selects
+LLM_MODEL=  # TO BE DECIDED — see docs/DECISIONS.md D-007. Do not hardcode a specific model here until the team selects one.
 
 # Optional settings
 LOG_LEVEL=INFO

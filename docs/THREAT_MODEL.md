@@ -57,7 +57,7 @@ For an academic, defensive-only project, the realistic threat actors are concept
 
 **Possible mitigation:** Verification explicitly checks cited evidence against the actual input.
 
-**Remaining limitation:** Verification is itself an LLM-based component (unless implemented otherwise) and can itself be wrong or fooled; this is a known, unresolved limitation, not something this project claims to fully solve.
+**Remaining limitation:** Verification is implemented as rule-based code in Phase 1 (see `docs/AGENT_DESIGN.md`), so it is not itself subject to LLM hallucination — but its own checking logic can still have blind spots or bugs, and it can be fooled by evidence that is technically present but misleading. This is a known, unresolved limitation, not something this project claims to fully solve.
 
 ### Threat: Prompt Injection (Where Relevant)
 

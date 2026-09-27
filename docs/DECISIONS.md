@@ -21,6 +21,7 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
 | D-011 | All system actions are simulated, never real | DECIDED BY THE TEAM |
 | D-012 | Project license | NOT YET DECIDED |
+| D-013 | Frontend technology | DECIDED BY M1 (DAY 2) |
 
 ---
 
@@ -113,6 +114,7 @@ This document records important decisions agreed upon by the team, and clearly m
 - PEFT
 - LoRA/QLoRA for Phase 2 fine-tuning
 - JSON/JSONL for initial data storage
+- Streamlit for the frontend (added Day 2 — see D-013)
 
 **Architecture approach:**
 - Plain Python modules for the multi-agent system.
@@ -162,6 +164,8 @@ This division creates three complementary workstreams:
    - Testing support
    - Reports and presentation/demo preparation
 
+**Clarification (Day 2, resolves a documentation gap flagged in `docs/frontend/DOC_REVIEW.md` G-15):** "Reports" under Student 3's scope means presentation-facing materials — the demo script, slides, and screenshots used to present the project — not the technical model-evaluation report (Phase 1 vs Phase 2 metrics, experiment records), which is Student 2's output per `docs/EXPERIMENTS.md`. Student 3 presents and visualizes Student 2's evaluation results; Student 2 produces them.
+
 The responsibilities may be adjusted when necessary based on project requirements, workload, or technical dependencies. Any significant change to the agreed task distribution should be communicated to the team and recorded when appropriate.
 
 **Status:** DECIDED BY THE TEAM AND APPROVED BY THE MENTOR
@@ -201,3 +205,23 @@ The responsibilities may be adjusted when necessary based on project requirement
 **Decision:** Not yet made. No license has been chosen or added to the repository, though it is public.
 
 **Status:** NOT YET DECIDED
+
+---
+
+### D-013 — Frontend Technology
+
+**Decision:** Streamlit. The frontend imports and calls the Coordinator/pipeline directly as a Python library — no REST API layer for the MVP.
+
+**Context:** `docs/frontend/DOC_REVIEW.md` (G-01) flagged this as a Day 2 blocker: D-007 named no frontend technology, and `docs/ARCHITECTURE.md` listed the output layer as "dashboard/report — TBD." Member 3 analyzed two options in `docs/frontend/SCHEMA_PROPOSAL.md` (Part C) and recommended Streamlit.
+
+**Alternatives considered:** A React (Vite) SPA + FastAPI backend — full client-side routing and unlimited visual control, but roughly double the 10-day effort (a separate API layer, CORS, two build systems), a second language (TypeScript), and maintainable mainly by one member. Rejected for this timeline.
+
+**Reason:** Streamlit is Python-only (consistent with D-006's simplicity principle and D-007's stack), needs no API layer (the frontend calls `Coordinator.process_event()` directly), is maintainable by all three members, and its layout primitives (`st.columns`, `st.expander`) are sufficient for the page designs in `docs/frontend/FRONTEND_SPEC.md`.
+
+**Consequences:**
+- The frontend lives in `frontend/` at the repository root (see updated tree in `docs/SYSTEM_ARCHITECTURE.md`).
+- `streamlit` is added to the D-007 technology stack (and `plotly` if charts need more than Streamlit's built-in ones).
+- FastAPI remains "only if required" per D-007 — this decision removes the Day 5 pressure to build it (`docs/frontend/DOC_REVIEW.md` G-02), since Streamlit needs no API boundary to call the pipeline in-process. FastAPI would only become necessary if the team later wants the frontend and backend deployed as separate processes.
+- Mock mode (`docs/frontend/fixtures/`) loads fixture JSON directly when the real pipeline isn't available yet.
+
+**Status:** DECIDED BY M1 (DAY 2)

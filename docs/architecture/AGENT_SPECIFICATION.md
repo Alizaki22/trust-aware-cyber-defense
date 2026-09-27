@@ -16,7 +16,7 @@ These are logical responsibilities. They do not require four independent models,
 
 **Main responsibility:** First-pass classification of what the event appears to be.
 
-**Interaction with other agents:** Sends findings to Verification; findings are visible to Intelligence and Behavioral Analysis agents for comparison.
+**Interaction with other agents:** Sends findings to Verification via the Coordinator. Does not see Intelligence's or Behavioral Analysis's findings before producing its own — all three specialist agents run independently on the same event so their conclusions aren't biased by each other (see `docs/AGENT_DESIGN.md`, `docs/architecture/DATA_FLOW.md`).
 
 **Evidence:** Must cite the specific part of the input event that supports its classification.
 
@@ -38,7 +38,7 @@ These are logical responsibilities. They do not require four independent models,
 
 **Main responsibility:** Determine whether the event involves anything already known to be malicious.
 
-**Interaction with other agents:** Sends findings to Verification; visible to Detection and Behavioral Analysis agents.
+**Interaction with other agents:** Sends findings to Verification via the Coordinator. Runs independently of Detection and Behavioral Analysis — see the note under Detection Agent above.
 
 **Evidence:** Must cite which indicator matched and against which data source.
 
@@ -60,7 +60,7 @@ These are logical responsibilities. They do not require four independent models,
 
 **Main responsibility:** Determine whether the event is unusual for this specific entity, independent of whether it matches a known threat signature.
 
-**Interaction with other agents:** Sends findings to Verification; visible to Detection and Intelligence agents.
+**Interaction with other agents:** Sends findings to Verification via the Coordinator. Runs independently of Detection and Intelligence — see the note under Detection Agent above.
 
 **Evidence:** Must describe which aspect of the current event deviates from the baseline and by how much (qualitatively or quantitatively).
 

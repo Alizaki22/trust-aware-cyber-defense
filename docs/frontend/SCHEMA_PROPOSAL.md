@@ -1,6 +1,6 @@
 # Input/Output Contract Proposal and Draft D-013
 
-Owner: Member 3 (Frontend & Product) · Day 1, Phase 3 of 3 · Status: **PROPOSED — REQUIRES TEAM APPROVAL**
+Owner: Member 3 (Frontend & Product) · Day 1, Phase 3 of 3 · Status: **REVIEWED BY M1 (DAY 2) — adopted into `docs/API_REFERENCE.md`; see "M1 Response" at the bottom of this file**
 
 This document turns the frontend needs in `FRONTEND_SPEC.md` and the gaps in `DOC_REVIEW.md` (G-01 – G-10) into a concrete contract for M1 to review. **Nothing here changes `docs/API_REFERENCE.md` or `docs/DECISIONS.md`** until the team approves it and M1 records it.
 
@@ -138,3 +138,28 @@ To be copied into `docs/DECISIONS.md` by M1 once the team decides.
 4. D-013: can the team decide by the start of Day 2?
 5. Trust history across runs (G-14): will it be persisted as JSONL? It is only needed for the stretch Trust History page.
 6. Reports (G-15): which report is M3 responsible for?
+
+---
+
+## M1 Response (Day 2)
+
+This is genuinely excellent work — thorough, correctly scoped (nothing here silently changed a decision), and it made Day 2 significantly faster. Answers to Part D, and what was adopted:
+
+**Adopted into `docs/API_REFERENCE.md` as-is or with minor naming:** B1 (typed fields), B2 (`verdict` and `error` on `AgentFinding`), B3 in full (`verification_results`, `trust_weighted`, `equal_weighted`, `trust_changed_outcome`, `verdict`, `confidence_value`, `routing_reason`, `simulated_action`, `run_id`, `phase`, `model`, `created_at`, `is_mock`, plus the `WeightingOutcome` and `SimulatedAction` helper models). A `Verdict` type alias was added since the proposal referenced it without formally defining it. G-10 was also fixed while I was in there: `docs/AGENT_DESIGN.md`'s illustrative `AgentFinding` no longer redefines the schema — it now points to `API_REFERENCE.md` as the single source.
+
+**Part A (input constraints):** adopted — `event_id` length, `raw_content` length (kept as a placeholder, flagged for revisit once a base model is chosen), IP typing, and port range are now in `SecurityEvent` in `API_REFERENCE.md`.
+
+1. **Yes** — and since this PR already updates `API_REFERENCE.md` directly, a separate PR from you for B1–B3 isn't needed. `src/models/` implementation on Day 2–3 is still yours/M2's to build against this now-finalized schema.
+2. **Yes** — `FinalRecommendation` returns both `trust_weighted` and `equal_weighted` always, not just the winner. Good catch; this was the right call for Experiment 2 and for keeping the UI from having to recompute aggregation logic.
+3. **Accepted** — `Verdict = Literal["malicious", "suspicious", "benign", "unknown"]` is now canonical in `API_REFERENCE.md`. Flagging for M2: your Detection Agent prompts and any fine-tuning labels should target this same four-value scale so peer agreement/voting works across agents without a translation layer.
+4. **D-013 decided:** Streamlit, per your Option 1 recommendation and reasoning — see `docs/DECISIONS.md`. This also resolves G-02: since Streamlit calls the Coordinator in-process, there's no Day 5 API-layer dependency; FastAPI stays "only if required."
+5. **Yes** — JSONL, consistent with D-007's existing "JSON/JSONL for initial data storage" choice. Scoped as stretch (Trust History page), not required for MVP.
+6. **Resolved (G-15)** — see the clarification added to D-008 in `docs/DECISIONS.md`: "Reports" under your scope means presentation/demo materials (slides, screenshots, demo script). The technical Phase 1 vs Phase 2 evaluation report is M2's output (`docs/EXPERIMENTS.md`); you present and visualize it.
+
+**Also fixed while auditing (from your `DOC_REVIEW.md` list):** G-11 (`docs/architecture/AGENT_SPECIFICATION.md` said agent findings are visible to peer agents; `AGENT_DESIGN.md`/`DATA_FLOW.md` said agents run independently — resolved in favor of independent execution, matching the majority of the design and the Coordinator sequence diagram). G-12 (Verification is decided as rule-based Python in Phase 1, not LLM-based — updated `AGENT_DESIGN.md` and `THREAT_MODEL.md` accordingly). G-16 (removed the stale `docs/TRUST_MODEL.md` tree entry from `SYSTEM_ARCHITECTURE.md`). G-17 (placeholder clone URL, `requirements-dev.txt` reference, and hardcoded `gpt-3.5-turbo` in `DEVELOPMENT_GUIDE.md`).
+
+**Not resolved, deliberately left open:**
+- **G-18** (title vs. repo name mismatch) is a branding call for the whole team, not something to fix inside a docs PR by renaming the GitHub repo unilaterally.
+- Numeric values inside the now-fixed schema shapes — trust weights, confidence threshold, initial trust score — remain **TO BE DECIDED**, same as before. This PR fixed the *shape* of the contract, not the numbers inside it.
+
+Nice work — this made Day 2 land faster and cleaner than it would have otherwise.

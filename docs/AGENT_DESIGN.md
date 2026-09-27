@@ -18,35 +18,27 @@ This document describes the design principles, patterns, and implementation appr
 
 ## Agent Base Class
 
-All agents inherit from a common base class that enforces the standard interface:
+All agents inherit from a common base class that enforces the standard interface. The output schema (`AgentFinding`) is defined once, canonically, in `docs/API_REFERENCE.md` — it is not redefined here to avoid two competing definitions drifting apart.
 
 ```python
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
-
-class AgentFinding(BaseModel):
-    """Standard output schema for all agents."""
-    agent: str                    # Agent identifier
-    classification: str           # Classification label or assessment
-    evidence: str                 # Cited evidence from the input
-    confidence: str               # "high", "medium", "low", or "none"
-    reasoning: str                # Brief explanation of the conclusion
+from docs_api_reference import AgentFinding, SecurityEvent  # canonical schemas — see docs/API_REFERENCE.md
 
 class BaseAgent(ABC):
     """Abstract base class for all agents."""
 
     @abstractmethod
-    def analyze(self, event: dict) -> AgentFinding:
+    def analyze(self, event: SecurityEvent) -> AgentFinding:
         """Analyze a security event and return a structured finding."""
         pass
 
     @abstractmethod
-    def get_prompt(self, event: dict) -> str:
+    def get_prompt(self, event: SecurityEvent) -> str:
         """Generate the role-specific prompt for this agent."""
         pass
 ```
 
-> **Note:** This is an illustrative design — not final code. The exact schema and class hierarchy will be determined during implementation.
+> **Note:** This is an illustrative design — not final code, and not a real import path. The exact module layout will be determined during implementation (see `docs/SYSTEM_ARCHITECTURE.md`'s proposed `src/` structure). The point that matters now: `analyze()` takes a `SecurityEvent` and returns an `AgentFinding`, both defined in `docs/API_REFERENCE.md`.
 
 ## Prompt Engineering Approach
 
@@ -77,6 +69,7 @@ SYSTEM PROMPT:
 
   Output your analysis as JSON in the following format:
   {
+    "verdict": "malicious|suspicious|benign|unknown",
     "classification": "...",
     "evidence": "...",
     "confidence": "high|medium|low|none",
@@ -183,8 +176,8 @@ See `docs/architecture/AGENT_SPECIFICATION.md` for the full specification of eac
 
 ### Verification Agent
 - Checks other agents' findings against cited evidence — does not re-classify the event.
-- May be implemented as plain code (not LLM) in Phase 1 for reliability.
-- Its own reliability is a known limitation, not something this project claims to fully solve.
+- **Decided:** implemented as plain rule-based Python code in Phase 1, not an LLM call — this matches `docs/ARCHITECTURE.md`'s default and keeps the one component whose job is "catch LLM mistakes" from being itself an LLM that can make the same kind of mistake. An LLM-based verifier remains an option to experiment with in Phase 2 if time allows, but is not the Phase 1 design.
+- Its own reliability is a known limitation, not something this project claims to fully solve — see `docs/THREAT_MODEL.md`.
 
 ## Open Design Questions
 
@@ -192,6 +185,4 @@ These require team decisions before implementation:
 
 - Exact prompt templates for each agent.
 - Whether to use Python `asyncio` for parallel agent execution or simple sequential calls.
-- Whether the Verification Agent should be LLM-based or rule-based in Phase 1.
-- Output format details (exact JSON schema fields beyond the illustrative example above).
-- Whether agents should have access to each other's findings before Verification (current design: no).
+- Output format details beyond the schema now fixed in `docs/API_REFERENCE.md` (e.g. exact `classification` label vocabulary per agent).

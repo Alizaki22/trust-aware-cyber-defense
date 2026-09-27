@@ -12,7 +12,8 @@ As decided in `docs/DECISIONS.md` (D-007):
 | Data Validation | Pydantic | Structured data models, input/output validation |
 | Testing | pytest | Unit and integration testing |
 | LLM Integration | OpenAI SDK | Initial LLM API communication |
-| Web Framework | FastAPI | API layer (only if required) |
+| Web Framework | FastAPI | API layer (only if required — not needed for the MVP; see D-013) |
+| Frontend | Streamlit | User interface (D-013, Day 2). Calls the Coordinator directly — no API layer needed |
 | ML/Fine-Tuning | Hugging Face Transformers | Model loading, tokenization, inference |
 | PEFT | PEFT library | Parameter-efficient fine-tuning adapters |
 | Fine-Tuning | LoRA / QLoRA | Phase 2 parameter-efficient fine-tuning |
@@ -36,7 +37,6 @@ trust-aware-cyber-defense/
 │   ├── ARCHITECTURE.md                # Conceptual system design
 │   ├── SYSTEM_ARCHITECTURE.md         # Technical architecture (this file)
 │   ├── AGENT_DESIGN.md                # Agent design patterns
-│   ├── TRUST_MODEL.md                 # Trust model overview
 │   ├── DECISIONS.md                   # Decision log
 │   ├── RESEARCH.md                    # Research foundation
 │   ├── THREAT_MODEL.md                # Threats and mitigations
@@ -46,10 +46,17 @@ trust-aware-cyber-defense/
 │   ├── TESTING.md                     # Testing strategy
 │   ├── EXPERIMENTS.md                 # Experiment design and tracking
 │   ├── DEVELOPMENT_GUIDE.md          # Developer setup guide
-│   └── architecture/
-│       ├── AGENT_SPECIFICATION.md     # Per-agent specification
-│       ├── TRUST_MODEL.md            # Trust model implementation details
-│       └── DATA_FLOW.md              # Data flow through the system
+│   ├── architecture/
+│   │   ├── AGENT_SPECIFICATION.md     # Per-agent specification
+│   │   ├── TRUST_MODEL.md            # Trust model implementation details
+│   │   └── DATA_FLOW.md              # Data flow through the system
+│   └── frontend/                      # M3's frontend planning docs
+│       ├── DOC_REVIEW.md             # Frontend requirements derived from project docs
+│       ├── FRONTEND_SPEC.md          # Pages, user flow, result states
+│       ├── SCHEMA_PROPOSAL.md        # Schema proposal that fed into API_REFERENCE.md
+│       └── fixtures/                  # Mock FinalRecommendation fixtures for frontend dev before the backend exists
+├── frontend/                           # Streamlit app (D-013; TO BE CREATED)
+│   └── pages/                          # One file per page (Analyze, Result, Scenarios, Phase Comparison)
 ├── src/                               # Source code (TO BE CREATED)
 │   ├── agents/                        # Agent implementations
 │   │   ├── __init__.py
@@ -91,7 +98,7 @@ trust-aware-cyber-defense/
 └── pyproject.toml                     # Project configuration
 ```
 
-> **Note:** The `src/`, `tests/`, `data/`, and `experiments/` directories do not exist yet. This structure is proposed and subject to team approval during implementation.
+> **Note:** `docs/`, including `docs/frontend/`, already exists. `frontend/`, `src/`, `tests/`, `data/`, and `experiments/` do not exist yet — this structure is proposed and subject to team approval during implementation.
 
 ## Module Architecture
 
