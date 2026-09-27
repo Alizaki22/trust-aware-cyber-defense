@@ -50,7 +50,7 @@ This allows fine-tuning models with significantly more parameters on consumer-gr
 
 ## Base Model Candidates
 
-The base model for fine-tuning is **TO BE DECIDED**. Candidates should meet these criteria:
+**Decided by the team: Qwen3-4B-Instruct-2507** (`Qwen/Qwen3-4B-Instruct-2507`, Apache-2.0). The same model, un-tuned, is the Phase 1 baseline, so the Phase 1 → Phase 2 difference is fine-tuning only. The criteria used for the choice were:
 
 | Criterion | Requirement |
 |---|---|
@@ -163,7 +163,7 @@ The agent code itself does not change — only the model it calls. See `docs/SYS
 
 ## Which Agent(s) to Fine-Tune
 
-**TO BE DECIDED** (see `docs/DECISIONS.md`, D-010). Factors to consider:
+**Decided by the team: the Detection agent only.** Phase 1 already sends the exact fine-tuning prompt to the base model and records a per-agent model identity, so Phase 2 only sets `DETECTION_MODEL` (see `docs/PHASE1_IMPLEMENTATION.md` §16). The factors considered were:
 
 - **Dataset availability:** Which agent's task has the best available training data?
 - **Expected impact:** Which agent would benefit most from domain-specific fine-tuning?

@@ -4,6 +4,8 @@
 
 This document records important decisions agreed upon by the team, and clearly marks decisions that are still pending team approval. No entry in this log represents a fabricated or assumed team agreement — anything not yet actually decided is marked **PROPOSED — REQUIRES TEAM APPROVAL** or **TO BE DECIDED**.
 
+> **Phase 1 update:** the team locked the Detection dataset (UNSW-NB15), the base LLM (Qwen3-4B-Instruct-2507 — resolves D-007's `LLM_MODEL`), the Phase 2 fine-tuning target (Detection agent only — resolves D-010) and the evaluation metrics. These, plus the technical decisions made while implementing Phase 1 (P1-01 … P1-14), are recorded in `docs/PHASE1_IMPLEMENTATION.md` §1 and §17, to be folded into this table once pending PR #8 (which also edits this file) is merged.
+
 ## Decision Log
 
 | ID | Decision | Status |

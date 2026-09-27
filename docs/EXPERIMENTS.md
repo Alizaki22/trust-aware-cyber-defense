@@ -21,7 +21,7 @@ Everything else (agent architecture, verification logic, trust model, test scena
 
 ### Dependent Variables (Metrics)
 
-Exact metrics are **TO BE DECIDED** by the team. Candidate metrics include:
+**Decided by the team:** Macro-F1, schema-valid output rate, evidence grounding rate and trust impact rate. Exact definitions, numerators/denominators and limitations are in `docs/PHASE1_IMPLEMENTATION.md` §10 (implemented in `src/evaluation/metrics.py`). The original candidate list is kept below for reference:
 
 | Metric | What It Measures | How to Measure |
 |---|---|---|
@@ -159,7 +159,7 @@ Per `docs/RESEARCH.md` and `AGENTS.md`:
 
 ## Experiment Results
 
-Results will be added here as experiments are conducted. No results are assumed or fabricated in advance.
+Results will be added here as experiments are conducted. No results are assumed or fabricated in advance. The evaluation pipeline (`python -m src.cli evaluate`) is implemented and has only been exercised with a stub Detection model so far; stub runs are pipeline checks and are not reported as results.
 
 | Experiment | Status | Key Result |
 |---|---|---|

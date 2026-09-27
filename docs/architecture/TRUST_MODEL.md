@@ -1,6 +1,6 @@
 # Trust Model
 
-Status: **CONCEPTUAL — weights, thresholds, and update frequency are TO BE DECIDED by the team.**
+Status: **CONCEPTUAL model below; Phase 1 implements it with concrete, documented choices** (weights 0.40/0.35/0.25, historical accuracy measured on a calibration subset, two-stage trust-weighted vote, threshold 0.60) — see `docs/PHASE1_IMPLEMENTATION.md` §7 and §9. Those values are implementation defaults, not tuned or validated research results.
 
 ## Why Trust Is Needed
 
