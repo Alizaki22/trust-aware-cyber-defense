@@ -48,8 +48,26 @@ for this dataset):
 7. Validate `attack_cat` distribution.
 8. Split into train (90% of official train) / validation (10% of
    official train) / test (official test set, unmodified).
-9. Convert each record to the Detection Agent instruction format
-   (see below).
+9. **Deduplicate each split independently** on the reduced Detection
+   feature set (the 14 `DETECTION_FEATURES` below, plus `attack_cat`
+   and `label`). Many raw UNSW-NB15 rows differ only in columns we
+   exclude from the model input (`id`, ports, `ct_*` counters,
+   etc.), so after feature reduction a large share of rows (commonly
+   ~45% in the official train/test files) become exact duplicates of
+   the same (input, output) pair. Deduplication removes those before
+   saving, so the model isn't trained/evaluated on many copies of
+   the same example. This is done per split, never across splits, so
+   the official train/validation/test boundary is untouched.
+   Feature-combinations that map to more than one `label` are
+   reported (not removed) as a data-quality note.
+10. Convert each record to the Detection Agent instruction format
+    (see below).
+
+Because of step 9, `data/splits/*.csv` and `data/splits/*.jsonl` will
+have noticeably fewer rows than the raw official train/test files --
+that's expected, not a bug. The exact/pre-dedup counts and the
+number removed are printed by the pipeline and can be diffed against
+the raw file's row count.
 
 ## Preprocessing NOT Performed
 
@@ -141,7 +159,10 @@ network-flow features, not all ~49 UNSW-NB15 columns:
 - input feature count matches the canonical 14-feature list
 - `label` is binary (0/1)
 - no malformed / unparsable JSONL lines
-- no exact-duplicate records within a split
+- no exact-duplicate records within a split (the generator now
+  removes these at preparation time -- see "Deduplication" above --
+  so this should always report 0 on output from
+  `prepare_unsw_nb15.py`)
 - class/label distributions (reported, not enforced)
 
 ## Citation

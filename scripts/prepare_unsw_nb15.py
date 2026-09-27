@@ -125,6 +125,15 @@ TARGET_FIELDS = {"label", "attack_cat"}
 # "id" is a row identifier, not a network-flow feature -- excluded
 # from DETECTION_FEATURES on purpose, in addition to TARGET_FIELDS.
 
+# Columns that define a "duplicate" Detection record. Two raw
+# UNSW-NB15 rows commonly differ only in columns we deliberately
+# exclude from the model input (id, ports, ct_* counters, etc.), so
+# after reducing to DETECTION_FEATURES they'd produce the exact same
+# training example. We dedupe on the reduced feature set plus the
+# target fields -- i.e. on what the JSONL record actually contains
+# (input + output) -- not on the full 45-column row.
+DEDUP_SUBSET = DETECTION_FEATURES + ["attack_cat", "label"]
+
 
 # ============================================================
 # LOAD
@@ -281,6 +290,53 @@ def create_splits(training_df: pd.DataFrame, testing_df: pd.DataFrame):
 
 
 # ============================================================
+# DEDUPLICATION (POST FEATURE-REDUCTION)
+# ============================================================
+
+def deduplicate_split(df: pd.DataFrame, split_name: str) -> pd.DataFrame:
+    """
+    Remove records that are exact duplicates once reduced to the
+    Detection Agent's input+output (DETECTION_FEATURES + attack_cat +
+    label). The full 45-column rows are usually NOT duplicates of
+    each other (id, ports, and several ct_* counters differ) -- the
+    duplication only appears after we intentionally drop those
+    columns for the LLM input. Left alone, the model would see many
+    identical (input, output) pairs.
+
+    Also reports, without removing, any "conflicting" cases: the same
+    DETECTION_FEATURES values mapped to more than one distinct label.
+    These are a real characteristic of the raw dataset (two flows
+    with identical values in our 14 chosen columns but different
+    outcomes) and are surfaced for visibility rather than silently
+    dropped or silently kept.
+    """
+
+    before = len(df)
+
+    conflicting_groups = df.groupby(DETECTION_FEATURES)["label"].nunique()
+    conflicting_feature_combinations = int((conflicting_groups > 1).sum())
+
+    deduped = df.drop_duplicates(subset=DEDUP_SUBSET, keep="first")
+
+    removed = before - len(deduped)
+
+    print(f"\nDeduplicating {split_name} (post feature-reduction)...")
+    print(f"Rows before dedup: {before}")
+    print(f"Exact duplicate records removed: {removed}")
+    print(f"Rows after dedup:  {len(deduped)}")
+
+    if conflicting_feature_combinations:
+        print(
+            f"Note: {conflicting_feature_combinations} distinct "
+            f"{len(DETECTION_FEATURES)}-feature combinations map to "
+            "more than one label in the raw data (kept, not removed "
+            "-- see docs)."
+        )
+
+    return deduped.reset_index(drop=True)
+
+
+# ============================================================
 # DETECTION AGENT INPUT
 # ============================================================
 
@@ -390,6 +446,14 @@ def main():
 
     # Split (official test partition preserved)
     train_df, validation_df, test_df = create_splits(training_df, testing_df)
+
+    # Deduplicate each split on the reduced Detection feature set,
+    # independently, so the official train/validation/test partition
+    # boundary itself is untouched -- we only remove redundant
+    # records within a split, never move records between splits.
+    train_df = deduplicate_split(train_df, "train")
+    validation_df = deduplicate_split(validation_df, "validation")
+    test_df = deduplicate_split(test_df, "test")
 
     # Save full-column CSV splits (kept for auditing / non-LLM use;
     # the Detection Agent only ever sees DETECTION_FEATURES via the
