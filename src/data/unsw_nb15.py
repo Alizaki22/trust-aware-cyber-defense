@@ -25,6 +25,9 @@ from typing import Iterable, Optional
 import pandas as pd
 
 from src.agents.prompts import DETECTION_INSTRUCTION, INPUT_HEADER, format_detection_input
+from src.models.types import ATTACK_CLASSES as _ATTACK_CLASSES
+from src.models.types import DETECTION_CLASSES
+from src.models.types import NORMAL_CLASS as _NORMAL_CLASS
 
 RANDOM_STATE = 42
 VALIDATION_FRACTION = 0.10
@@ -51,12 +54,11 @@ CATEGORICAL_FEATURES = ["proto", "service", "state"]
 TARGET_FIELDS = {"label", "attack_cat"}
 DEDUP_SUBSET = DETECTION_FEATURES + ["attack_cat", "label"]
 
-NORMAL_CLASS = "Normal"
-ATTACK_CATEGORIES = [
-    "Analysis", "Backdoor", "DoS", "Exploits", "Fuzzers",
-    "Generic", "Reconnaissance", "Shellcode", "Worms",
-]
-CLASSIFICATIONS = [NORMAL_CLASS] + ATTACK_CATEGORIES
+# Label vocabulary: the canonical DETECTION_CLASSES (src/models/types.py),
+# shared with the Detection prompt, output schema, Verification and metrics.
+NORMAL_CLASS = _NORMAL_CLASS
+ATTACK_CATEGORIES = list(_ATTACK_CLASSES)
+CLASSIFICATIONS = list(DETECTION_CLASSES)
 LABEL_TO_VERDICT = {0: "benign", 1: "malicious"}
 OUTPUT_FIELDS = ["verdict", "classification", "evidence", "confidence", "reasoning"]
 TRAINING_CONFIDENCE = "high"  # placeholder: labels carry no confidence information

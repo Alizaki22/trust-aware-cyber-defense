@@ -7,14 +7,10 @@ base model, so the only difference between phases is the model (D-005).
 
 INPUT_HEADER = "Analyze this network security event:"
 
-# The UNSW-NB15 label set. The base model must be told the allowed labels,
-# otherwise Phase 1 Macro-F1 would measure label-vocabulary guessing rather
-# than detection, and Phase 2 would "win" just by learning the names.
-# Must equal src.data.unsw_nb15.CLASSIFICATIONS (checked by a test).
-DETECTION_CLASSES = (
-    "Normal", "Analysis", "Backdoor", "DoS", "Exploits", "Fuzzers",
-    "Generic", "Reconnaissance", "Shellcode", "Worms",
-)
+# The allowed labels are stated in the prompt: without them a zero-shot base
+# model invents label names, so Phase 1 Macro-F1 would measure vocabulary
+# guessing and Phase 2 would "win" just by learning the names (audit C1).
+from src.models.types import DETECTION_CLASSES  # noqa: E402  (single source of truth)
 
 DETECTION_INSTRUCTION = (
     "You are the Detection Agent. "

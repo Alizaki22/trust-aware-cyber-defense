@@ -2,7 +2,7 @@
 
 Sends exactly the fine-tuning prompt (system=DETECTION_INSTRUCTION,
 user=INPUT_HEADER + raw_content) to the configured model, parses the JSON
-answer into ModelFindingOutput, and retries once on an unparseable answer.
+answer into DetectionModelOutput (label set enforced), and retries once on an unparseable answer.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from src.agents.base import BaseAgent
 from src.agents.prompts import DETECTION_INSTRUCTION, RETRY_SUFFIX, format_detection_input
-from src.models import AgentFinding, ModelFindingOutput, SecurityEvent
+from src.models import AgentFinding, DetectionModelOutput, SecurityEvent
 from src.utils.llm_client import LLMClient, LLMError, extract_json_object
 
 
@@ -28,13 +28,14 @@ class DetectionTrace:
     transport_error: bool = False  # the model server failed; no response to judge
 
 
-def parse_model_output(text: str) -> ModelFindingOutput:
-    """Raises ValueError/ValidationError if the text is not a valid finding."""
+def parse_model_output(text: str) -> DetectionModelOutput:
+    """Raises ValueError/ValidationError if the text is not a valid Detection finding
+    (exact keys, canonical enums, classification in DETECTION_CLASSES)."""
     data = extract_json_object(text)
-    extra = set(data) - set(ModelFindingOutput.model_fields)
+    extra = set(data) - set(DetectionModelOutput.model_fields)
     if extra:
         raise ValueError(f"unexpected keys {sorted(extra)}")
-    return ModelFindingOutput.model_validate(data)
+    return DetectionModelOutput.model_validate(data)
 
 
 class DetectionAgent(BaseAgent):

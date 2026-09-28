@@ -14,10 +14,9 @@ Rules, applied per finding in order:
 from __future__ import annotations
 
 from src.agents.base import event_fields, parse_pairs
-from src.models import AgentFinding, SecurityEvent, VerificationResult
+from src.models import ATTACK_CLASSES, NORMAL_CLASS, AgentFinding, SecurityEvent, VerificationResult
 
-KNOWN_ATTACKS = {"analysis", "backdoor", "dos", "exploits", "fuzzers", "generic",
-                 "reconnaissance", "shellcode", "worms"}
+KNOWN_ATTACKS = {name.lower() for name in ATTACK_CLASSES}
 
 
 def _same(cited: str, actual: str) -> bool:
@@ -59,7 +58,7 @@ class VerificationAgent:
             return result("verified_inconsistent", "; ".join(parts) + ".")
         if finding.agent == "detection":
             cls = finding.classification.strip().lower()
-            if cls == "normal" and finding.verdict in ("malicious", "suspicious"):
+            if cls == NORMAL_CLASS.lower() and finding.verdict in ("malicious", "suspicious"):
                 return result("verified_inconsistent", "Classification 'Normal' contradicts the verdict.")
             if cls in KNOWN_ATTACKS and finding.verdict == "benign":
                 return result("verified_inconsistent", "An attack classification contradicts verdict 'benign'.")

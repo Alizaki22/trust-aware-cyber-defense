@@ -1,9 +1,11 @@
 """Agent output = the inter-agent message (agents never message each other)."""
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-from src.models.types import AgentName, Confidence, Verdict
+from src.models.types import DETECTION_CLASSES, AgentName, Confidence, Verdict
+
+_CANONICAL_CLASS = {c.lower(): c for c in DETECTION_CLASSES}
 
 
 class ModelFindingOutput(BaseModel):
@@ -14,6 +16,23 @@ class ModelFindingOutput(BaseModel):
     evidence: str
     confidence: Confidence
     reasoning: str
+
+
+class DetectionModelOutput(ModelFindingOutput):
+    """What the Detection model must generate (also its fine-tuning target).
+
+    ``classification`` must be one of the canonical UNSW-NB15 labels
+    (DETECTION_CLASSES); case and surrounding whitespace are normalised, any
+    other label makes the output schema-invalid.
+    """
+
+    @field_validator("classification")
+    @classmethod
+    def _canonical_label(cls, value: str) -> str:
+        canonical = _CANONICAL_CLASS.get(value.strip().lower())
+        if canonical is None:
+            raise ValueError(f"classification must be one of {list(DETECTION_CLASSES)}")
+        return canonical
 
 
 class AgentFinding(ModelFindingOutput):
