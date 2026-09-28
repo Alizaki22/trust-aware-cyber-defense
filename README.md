@@ -69,7 +69,7 @@ src/                     Phase 1 implementation (python -m src.cli ...)
   utils/llm_client.py    OpenAI-compatible client (Qwen3-4B-Instruct-2507) + offline stub
   api.py, pipeline.py, config.py, cli.py
 frontend/                Streamlit app (app.py) + display helpers
-tests/                   pytest suite (74 tests)
+tests/                   pytest suite (112 tests)
 data/
   threat_intel/, baselines/, events/   small SYNTHETIC reference data (committed)
   eval/                  frozen evaluation/calibration subset ids (committed)
