@@ -33,3 +33,45 @@ def test_app_reports_invalid_pasted_event(monkeypatch):
     at.text_area[0].input('{"event_id": "x", "source_ip": "nope"}').run()
     at.button[0].click().run()
     assert not at.exception and at.error
+
+
+def _render_crafted_result():
+    """Runs inside AppTest: render a result whose model-derived text contains Markdown."""
+    import json
+    from pathlib import Path
+
+    from frontend.render import render_result
+    from src.models import FinalRecommendation, SecurityEvent
+
+    root = Path.cwd()
+    data = json.loads((root / "docs/frontend/fixtures/scenario_01.json").read_text())
+    payload = "**bold** [click](http://evil.example) <b>x</b>"
+    result = data["result"]
+    result["classification"] = payload
+    result["simulated_action"]["description"] = payload
+    result["agent_findings"][0]["classification"] = payload
+    result["agent_findings"][0]["error"] = payload
+    result["verification_results"][0]["reason"] = payload
+    render_result(SecurityEvent.model_validate(data["event"]), FinalRecommendation.model_validate(result))
+
+
+def test_model_generated_text_is_rendered_literally():
+    """R-08: Markdown in model/event-derived text is escaped, never interpreted."""
+    from frontend.view import plain
+    at = AppTest.from_function(_render_crafted_result, default_timeout=60).run()
+    assert not at.exception
+    escaped = plain("**bold** [click](http://evil.example) <b>x</b>")
+    rendered = ([e.value for e in at.subheader] + [e.value for e in at.info] + [e.value for e in at.error]
+                + [e.value for e in at.caption])
+    assert any(escaped in text for text in at.subheader.values)
+    assert any(escaped in text for text in at.info.values)
+    assert any(escaped in text for text in at.error.values)
+    assert not any("**bold**" in text and escaped not in text for text in rendered)
+
+
+def test_sidebar_warns_when_trust_is_not_calibrated(monkeypatch, tmp_path):
+    monkeypatch.setenv("LLM_BACKEND", "stub")
+    monkeypatch.setenv("RUNS_DIR", str(tmp_path / "runs"))  # no calibration file here
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    assert not at.exception
+    assert any("not calibrated" in w.value for w in at.sidebar.warning)

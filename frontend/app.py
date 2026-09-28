@@ -16,8 +16,8 @@ if str(ROOT) not in sys.path:
 
 from pydantic import ValidationError  # noqa: E402
 
-from frontend.view import (ROUTING, VERIFICATION, confidence_text, plain,  # noqa: E402
-                           trust_text, verdict_label)
+from frontend.render import render_result  # noqa: E402
+from frontend.view import plain  # noqa: E402
 from src.config import SystemConfig  # noqa: E402
 from src.models import FinalRecommendation, SecurityEvent  # noqa: E402
 
@@ -25,9 +25,14 @@ st.set_page_config(page_title="Trust-aware cyber defense", page_icon="🛡️", 
 
 
 @st.cache_resource
-def get_coordinator():
+def _coordinator_for(config_json: str):
+    """One coordinator per configuration (a changed config never reuses a stale one)."""
     from src.pipeline import build_coordinator
-    return build_coordinator(SystemConfig.from_env())
+    return build_coordinator(SystemConfig.model_validate_json(config_json))
+
+
+def get_coordinator():
+    return _coordinator_for(SystemConfig.from_env().model_dump_json())
 
 
 def load_examples() -> dict[str, dict]:
@@ -47,67 +52,6 @@ def load_fixtures() -> dict[str, dict]:
             for p in sorted((ROOT / "docs/frontend/fixtures").glob("scenario_*.json"))}
 
 
-def render_result(event: SecurityEvent, result: FinalRecommendation) -> None:
-    tags = [t for t, on in [("synthetic data", event.metadata.get("source") == "SYNTHETIC"),
-                            ("mock / stub model", result.is_mock)] if on]
-    st.caption(f"Event {result.event_id} · phase {result.phase} · run {result.run_id}"
-               + (f" · {', '.join(tags)}" if tags else ""))
-
-    icon, routing = ROUTING[result.routing]
-    st.subheader(f"{verdict_label(result.verdict)} — {plain(result.classification)}")
-    left, right = st.columns(2)
-    left.markdown(f"**Confidence** {confidence_text(result.confidence, result.confidence_value)}")
-    right.markdown(f"**Next step** {icon} {routing}")
-    st.markdown(f"Why: {result.routing_reason}")
-    if result.simulated_action:
-        st.info(f"SIMULATED — nothing was executed. {result.simulated_action.description}")
-    if result.disagreement_summary:
-        st.warning(f"Agents disagree: {result.disagreement_summary}")
-
-    st.markdown("#### Did trust change the outcome?")
-    eq, tw = st.columns(2)
-    for column, outcome, title in [(eq, result.equal_weighted, "Every agent counted equally"),
-                                   (tw, result.trust_weighted, "Weighted by trust")]:
-        column.markdown(f"**{title}:** {verdict_label(outcome.verdict)}" + (" (tie)" if outcome.tie else ""))
-        for verdict, weight in sorted(outcome.verdict_weights.items()):
-            column.progress(min(weight / max(sum(outcome.verdict_weights.values()), 1e-9), 1.0),
-                            text=f"{verdict}: {weight:.2f}")
-    if result.trust_changed_outcome:
-        st.success("Trust weighting changed the outcome for this event.")
-    else:
-        st.caption("Both methods reached the same outcome.")
-
-    st.markdown("#### What each agent found")
-    status = {v.agent: v for v in result.verification_results}
-    trust = {t.agent: t for t in result.trust_scores}
-    for column, finding in zip(st.columns(len(result.agent_findings)), result.agent_findings):
-        with column.container(border=True):
-            st.markdown(f"**{finding.agent.capitalize()}**")
-            st.markdown(verdict_label(finding.verdict, finding.classification))
-            st.caption(f"{plain(finding.classification)} · {confidence_text(finding.confidence)}"
-                       + (f" · {plain(finding.model)}" if finding.model else ""))
-            if finding.error:
-                st.error(f"Agent failed: {finding.error}")
-            if finding.evidence:
-                st.code(finding.evidence, language=None)
-            if finding.agent in status:
-                v_icon, v_text = VERIFICATION[status[finding.agent].status]
-                st.markdown(f"{v_icon} {v_text}")
-                st.caption(plain(status[finding.agent].reason))
-            if finding.agent in trust:
-                t = trust[finding.agent]
-                st.markdown(f"Trust **{trust_text(t.total_score)}**",
-                            help="A weighting heuristic, not a probability of being correct.")
-                st.caption(f"history {t.historical_accuracy:.2f} · verification {t.verification_score:.2f}"
-                           f" · peer agreement {t.peer_agreement:.2f}")
-            with st.expander("Reasoning"):
-                st.text(finding.reasoning)
-
-    with st.expander("Raw event and result"):
-        st.code(event.raw_content, language=None)  # untrusted content: plain text only
-        st.json(result.model_dump(mode="json"), expanded=False)
-
-
 st.title("Trust-aware cyber defense")
 mode = st.sidebar.radio("Results from", ["Live pipeline", "Saved examples"],
                         help="Saved examples are mock fixtures used while the backend is unavailable.")
@@ -121,6 +65,12 @@ else:
     config = SystemConfig.from_env()
     model_note = "stub model (offline, not Qwen)" if config.llm_backend == "stub" else f"{config.llm_model} at {config.llm_base_url}"
     st.sidebar.caption(f"Detection model: {model_note}")
+    history = get_coordinator().trust.history
+    if history.accuracy:
+        st.sidebar.caption(f"Trust history: measured on the calibration subset ({plain(history.source)})")
+    else:
+        st.sidebar.warning("Trust history: not calibrated — every agent uses the initial trust score. "
+                           "Run `python -m src.cli calibrate` for meaningful trust weights.")
     pick, paste = st.tabs(["Choose an event", "Paste event JSON"])
     with pick:
         examples = load_examples()
@@ -134,11 +84,11 @@ else:
             raw = json.loads(pasted) if use_pasted else picked
             event = SecurityEvent.model_validate(raw)
         except json.JSONDecodeError as error:
-            st.error(f"That is not valid JSON: {error}")
+            st.error(f"That is not valid JSON: {plain(error)}")
         except ValidationError as error:
             st.error("The event does not match the SecurityEvent schema:")
             for item in error.errors():
-                st.markdown(f"- `{'.'.join(map(str, item['loc']))}`: {item['msg']}")
+                st.markdown(f"- `{'.'.join(map(str, item['loc']))}`: {plain(item['msg'])}")
         else:
             with st.spinner("Running Detection, Intelligence, Behavioral Analysis and Verification…"):
                 result = get_coordinator().process_event(event)
