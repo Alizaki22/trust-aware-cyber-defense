@@ -20,13 +20,14 @@ def reference_paths(config: SystemConfig) -> dict:
     d = config.data_dir
     return {"ioc": d / "threat_intel" / "ioc_synthetic.json",
             "entities": d / "baselines" / "entities_synthetic.json",
-            "profiles": d / "processed" / "behavioral_profiles.json"}
+            "profiles": d / "processed" / "behavioral_profiles.json",
+            "signatures": d / "processed" / "intel_signatures.json"}
 
 
 def build_specialists(config: SystemConfig, detection_llm: Optional[LLMClient] = None) -> dict:
     paths = reference_paths(config)
     return {"detection": DetectionAgent(detection_llm or build_llm_client(config, "detection")),
-            "intelligence": IntelligenceAgent.from_file(paths["ioc"]),
+            "intelligence": IntelligenceAgent.from_file(paths["ioc"], paths["signatures"]),
             "behavioral": BehavioralAgent.from_files(paths["profiles"], paths["entities"])}
 
 

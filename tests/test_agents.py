@@ -130,3 +130,50 @@ def test_prompt_states_the_unsw_label_set():
     assert list(DETECTION_CLASSES) == CLASSIFICATIONS
     for label in CLASSIFICATIONS:
         assert label in DETECTION_INSTRUCTION
+
+
+# ---------------- Intelligence: flow-signature reputation (C2)
+SIGS = {"source": "test signatures", "signatures": {
+    "udp|dns|INT|254|0": {"reputation": "malicious", "support": 500, "attack_share": 1.0, "top_attack_cat": "Generic"},
+    "tcp|-|FIN|31|29": {"reputation": "benign", "support": 40, "attack_share": 0.0, "top_attack_cat": None}}}
+
+
+def test_intelligence_known_malicious_signature_is_grounded():
+    from src.agents.verification import VerificationAgent
+    e = event()
+    f = IntelligenceAgent(IOC, SIGS).analyze(e)
+    assert (f.verdict, f.classification, f.confidence) == ("malicious", "known_malicious_signature", "high")
+    assert VerificationAgent().verify(f, e).status == "verified_consistent"
+
+
+def test_intelligence_known_benign_signature():
+    e = event(raw_content="dur=0.1, proto=tcp, service=-, state=FIN, spkts=2, dpkts=0, sbytes=146, "
+                          "dbytes=0, rate=10.0, sttl=31, dttl=29, sload=1.0, dload=0.0, tcprtt=0.0")
+    f = IntelligenceAgent(IOC, SIGS).analyze(e)
+    assert (f.verdict, f.classification, f.confidence) == ("benign", "known_benign_signature", "medium")
+
+
+def test_intelligence_unknown_signature_is_no_match_not_benign():
+    e = event(raw_content="dur=0.1, proto=tcp, service=http, state=CON, spkts=2, dpkts=0, sbytes=146, "
+                          "dbytes=0, rate=10.0, sttl=62, dttl=252, sload=1.0, dload=0.0, tcprtt=0.0")
+    f = IntelligenceAgent(IOC, SIGS).analyze(e)
+    assert (f.verdict, f.classification) == ("unknown", "no_match")
+
+
+def test_intelligence_ioc_match_takes_precedence_over_benign_signature():
+    e = event(source_ip="203.0.113.45", raw_content="proto=tcp, service=-, state=FIN, sttl=31, dttl=29")
+    f = IntelligenceAgent(IOC, SIGS).analyze(e)
+    assert (f.verdict, f.classification) == ("malicious", "known_malicious_indicator")
+
+
+def test_build_intel_signatures_thresholds():
+    from src.data.unsw_nb15 import build_intel_signatures
+    rows = ([dict(proto="udp", service="dns", state="INT", sttl=254, dttl=0, label=1, attack_cat="Generic")] * 25
+            + [dict(proto="tcp", service="-", state="FIN", sttl=31, dttl=29, label=0, attack_cat="Normal")] * 25
+            + [dict(proto="tcp", service="http", state="FIN", sttl=62, dttl=252, label=l, attack_cat=c)
+               for l, c in [(1, "Exploits"), (0, "Normal")] * 15]          # mixed -> no signature
+            + [dict(proto="arp", service="-", state="INT", sttl=0, dttl=0, label=1, attack_cat="DoS")] * 5)  # too rare
+    sigs = build_intel_signatures(pd.DataFrame(rows))["signatures"]
+    assert sigs["udp|dns|INT|254|0"]["reputation"] == "malicious"
+    assert sigs["tcp|-|FIN|31|29"]["reputation"] == "benign"
+    assert "tcp|http|FIN|62|252" not in sigs and "arp|-|INT|0|0" not in sigs

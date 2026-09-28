@@ -9,6 +9,7 @@ Single canonical implementation of Phase 1 data preparation:
     -> stratified, input-group-aware train/validation split (seed 42)
     -> data/splits/{train,validation,test}.{csv,jsonl}   (fine-tuning format)
     -> data/processed/behavioral_profiles.json            (from TRAIN normals only)
+    -> data/processed/intel_signatures.json               (from TRAIN only)
     -> frozen evaluation subset (test) + calibration subset (validation)
 
 The methodology and output format are identical to the dataset-fix branch
@@ -66,6 +67,15 @@ PROFILE_NUMERIC_FEATURES = ["dur", "spkts", "dpkts", "sbytes", "dbytes", "rate",
 PROFILE_SET_FEATURES = ["state", "sttl", "dttl"]
 PROFILE_MIN_RECORDS = 30
 PROFILE_QUANTILES = (0.01, 0.99)
+
+# Intelligence flow-signature reputation (built from the TRAIN split only).
+# A signature is the exact (proto, service, state, sttl, dttl) tuple. It is
+# "known malicious" / "known benign" only with enough support and a clear
+# majority; everything else is "no match" (an abstention, never benign).
+SIGNATURE_FEATURES = ["proto", "service", "state", "sttl", "dttl"]
+SIGNATURE_MIN_SUPPORT = 20
+SIGNATURE_MALICIOUS_SHARE = 0.95   # attack share >= this -> known malicious
+SIGNATURE_BENIGN_SHARE = 0.05      # attack share <= this -> known benign
 
 # Frozen subsets (stratified by class, seeded)
 EVAL_PER_CLASS = 50          # from the official test split  -> ~494 events
@@ -215,6 +225,46 @@ def build_behavioral_profiles(train: pd.DataFrame) -> dict:
     return {"source": "UNSW-NB15 train split, label=0 records only",
             "quantiles": list(PROFILE_QUANTILES), "min_records": PROFILE_MIN_RECORDS,
             "profiles": profiles}
+
+
+def signature_key(values: dict) -> str:
+    """'proto|service|state|sttl|dttl' with numbers normalised (254.0 -> 254)."""
+    parts = []
+    for feature in SIGNATURE_FEATURES:
+        value = str(values[feature]).strip()
+        try:
+            number = float(value)
+            value = str(int(number)) if number.is_integer() else str(number)
+        except ValueError:
+            pass
+        parts.append(value)
+    return "|".join(parts)
+
+
+def build_intel_signatures(train: pd.DataFrame) -> dict:
+    """Flow-signature reputation learned from TRAIN-split labels only."""
+    keys = train.apply(lambda row: signature_key(row), axis=1)
+    grouped = train.assign(_key=keys).groupby("_key", sort=True)
+    signatures = {}
+    for key, group in grouped:
+        support = len(group)
+        if support < SIGNATURE_MIN_SUPPORT:
+            continue
+        share = float(group["label"].mean())
+        if share >= SIGNATURE_MALICIOUS_SHARE:
+            reputation = "malicious"
+        elif share <= SIGNATURE_BENIGN_SHARE:
+            reputation = "benign"
+        else:
+            continue
+        top = group.loc[group["label"] == 1, "attack_cat"].value_counts()
+        signatures[key] = {"reputation": reputation, "support": support,
+                           "attack_share": round(share, 4),
+                           "top_attack_cat": str(top.index[0]) if len(top) else None}
+    return {"source": "UNSW-NB15 train split flow-signature reputation (labels from train only)",
+            "features": SIGNATURE_FEATURES, "min_support": SIGNATURE_MIN_SUPPORT,
+            "malicious_share": SIGNATURE_MALICIOUS_SHARE, "benign_share": SIGNATURE_BENIGN_SHARE,
+            "signatures": signatures}
 
 
 def stratified_sample_ids(df: pd.DataFrame, per_class: int) -> list[int]:
@@ -372,6 +422,12 @@ def prepare(data_dir: Path, log=print) -> dict:
     profiles = build_behavioral_profiles(splits["train"])
     (processed_dir / "behavioral_profiles.json").write_text(json.dumps(profiles, indent=1))
     log(f"behavioral profiles: {len(profiles['profiles'])} (proto|service) profiles")
+
+    signatures = build_intel_signatures(splits["train"])
+    (processed_dir / "intel_signatures.json").write_text(json.dumps(signatures, indent=1))
+    reputations = [v["reputation"] for v in signatures["signatures"].values()]
+    log(f"intel signatures: {reputations.count('malicious')} known-malicious, "
+        f"{reputations.count('benign')} known-benign")
 
     eval_ids = _freeze_ids(eval_dir / "phase1_eval_subset_ids.json",
                            stratified_sample_ids(splits["test"], EVAL_PER_CLASS),
