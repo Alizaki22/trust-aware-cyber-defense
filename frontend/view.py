@@ -31,3 +31,11 @@ def trust_text(score: float) -> str:
 def confidence_text(label: str, value: float | None = None) -> str:
     bars = CONFIDENCE_BARS.get(label, "▯▯▯")
     return f"{bars} {label}" + (f" ({value:.2f})" if value is not None else "")
+
+
+_MARKDOWN_SPECIAL = "\\`*_{}[]()#+-.!|<>~"
+
+
+def plain(text: object) -> str:
+    """Escape Markdown so model-generated text is shown literally (R-08)."""
+    return "".join("\\" + c if c in _MARKDOWN_SPECIAL else c for c in str(text))

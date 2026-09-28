@@ -16,8 +16,8 @@ if str(ROOT) not in sys.path:
 
 from pydantic import ValidationError  # noqa: E402
 
-from frontend.view import (ROUTING, VERIFICATION, confidence_text, trust_text,  # noqa: E402
-                           verdict_label)
+from frontend.view import (ROUTING, VERIFICATION, confidence_text, plain,  # noqa: E402
+                           trust_text, verdict_label)
 from src.config import SystemConfig  # noqa: E402
 from src.models import FinalRecommendation, SecurityEvent  # noqa: E402
 
@@ -54,7 +54,7 @@ def render_result(event: SecurityEvent, result: FinalRecommendation) -> None:
                + (f" · {', '.join(tags)}" if tags else ""))
 
     icon, routing = ROUTING[result.routing]
-    st.subheader(f"{verdict_label(result.verdict)} — {result.classification}")
+    st.subheader(f"{verdict_label(result.verdict)} — {plain(result.classification)}")
     left, right = st.columns(2)
     left.markdown(f"**Confidence** {confidence_text(result.confidence, result.confidence_value)}")
     right.markdown(f"**Next step** {icon} {routing}")
@@ -84,8 +84,8 @@ def render_result(event: SecurityEvent, result: FinalRecommendation) -> None:
         with column.container(border=True):
             st.markdown(f"**{finding.agent.capitalize()}**")
             st.markdown(verdict_label(finding.verdict, finding.classification))
-            st.caption(f"{finding.classification} · {confidence_text(finding.confidence)}"
-                       + (f" · {finding.model}" if finding.model else ""))
+            st.caption(f"{plain(finding.classification)} · {confidence_text(finding.confidence)}"
+                       + (f" · {plain(finding.model)}" if finding.model else ""))
             if finding.error:
                 st.error(f"Agent failed: {finding.error}")
             if finding.evidence:
@@ -93,7 +93,7 @@ def render_result(event: SecurityEvent, result: FinalRecommendation) -> None:
             if finding.agent in status:
                 v_icon, v_text = VERIFICATION[status[finding.agent].status]
                 st.markdown(f"{v_icon} {v_text}")
-                st.caption(status[finding.agent].reason)
+                st.caption(plain(status[finding.agent].reason))
             if finding.agent in trust:
                 t = trust[finding.agent]
                 st.markdown(f"Trust **{trust_text(t.total_score)}**",
