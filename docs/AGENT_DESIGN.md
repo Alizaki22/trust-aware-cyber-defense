@@ -158,7 +158,7 @@ If an agent requires data that is not available (e.g., Intelligence Agent has no
 The agent design supports a clean Phase 1 → Phase 2 transition:
 
 1. **Phase 1:** All agents call the same base LLM through the shared `LLM Client`.
-2. **Phase 2:** The agent(s) selected for fine-tuning (TO BE DECIDED — see `docs/DECISIONS.md`, D-010) are configured to use the fine-tuned model instead.
+2. **Phase 2:** The Detection agent — the only agent selected for fine-tuning (`docs/DECISIONS.md`, D-010) — is configured to use the fine-tuned model instead (`DETECTION_MODEL`); the other agents are unchanged.
 3. **No code changes in the agent logic.** Only the model reference changes — the prompts, output parsing, and downstream processing remain the same.
 4. **Comparison.** Running the same scenarios through Phase 1 and Phase 2 configurations produces directly comparable results.
 
@@ -169,7 +169,7 @@ See `docs/architecture/AGENT_SPECIFICATION.md` for the full specification of eac
 ### Detection Agent
 - Simplest classification task — "what type of event is this?"
 - Likely the most straightforward to implement and test.
-- Good candidate for fine-tuning experiments (but not assumed — see D-010).
+- Selected for Phase 2 fine-tuning (D-010).
 
 ### Intelligence Agent
 - Requires a local threat intelligence dataset (source TO BE DECIDED).
