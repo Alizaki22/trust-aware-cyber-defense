@@ -15,6 +15,7 @@ Routing (first rule that applies):
   no winner / tie               -> human_review
   confidence_value < threshold  -> human_review
   agents disagree AND winner is not benign -> human_review
+  only one agent voted AND winner is not benign -> human_review (uncorroborated)
   winner benign                 -> further_verification (no action proposed)
   otherwise                     -> simulated_action (never executed, D-011)
 """
@@ -77,7 +78,8 @@ class RecommendationEngine:
 
         total = sum(trust_weighted.verdict_weights.values())
         value = round(side_weight(trust_weighted) / total, 4) if total else 0.0
-        voted = {side(f.verdict) for f in findings if not abstains(f)}
+        voters = [f for f in findings if not abstains(f)]
+        voted = {side(f.verdict) for f in voters}
         disagreement = len(voted) > 1
 
         if verdict == "unknown":
@@ -86,10 +88,14 @@ class RecommendationEngine:
             routing, reason = "human_review", f"Winning share {value:.2f} is below the threshold {self.threshold:.2f}."
         elif disagreement and verdict != "benign":
             routing, reason = "human_review", "Agents disagree on a non-benign verdict."
+        elif len(voters) == 1 and verdict != "benign":
+            routing, reason = "human_review", (f"Only {voters[0].agent} reached a conclusion; "
+                                               "a single uncorroborated threat verdict is not acted on.")
         elif verdict == "benign":
             routing, reason = "further_verification", f"Benign verdict (share {value:.2f}); no action proposed."
         else:
-            routing, reason = "simulated_action", f"Agents agree on '{verdict}' (share {value:.2f} >= {self.threshold:.2f})."
+            routing, reason = "simulated_action", (f"{len(voters)} agents agree on '{verdict}' "
+                                                   f"(share {value:.2f} >= {self.threshold:.2f}).")
 
         supporters = sorted((f for f in findings if not abstains(f) and f.verdict == verdict),
                             key=lambda f: -trust.get(f.agent, 0.0))

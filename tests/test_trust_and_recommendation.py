@@ -123,3 +123,24 @@ def test_history_load_and_calibrate(tmp_path):
     history = TrustHistory.load(path, initial=0.5)
     assert history.get("detection") == 0.5 and history.get("intelligence") == 0.5
     assert TrustHistory.load(tmp_path / "missing.json", 0.3).get("behavioral") == 0.3
+
+
+def test_single_uncorroborated_threat_vote_goes_to_human_review():
+    from src.models import AgentFinding
+    from src.recommendation.recommender import RecommendationEngine
+    def f(agent, verdict):
+        return AgentFinding(agent=agent, event_id="e", verdict=verdict, classification="x",
+                            evidence="", confidence="high", reasoning="r")
+    from src.models import TrustScore
+    findings = [f("detection", "malicious"), f("intelligence", "unknown"), f("behavioral", "unknown")]
+    trust = [TrustScore(agent=a, event_id="e", historical_accuracy=0.5, verification_score=0.5,
+                        peer_agreement=0.5, total_score=0.5) for a in ("detection", "intelligence", "behavioral")]
+    rec = RecommendationEngine(0.6).recommend(event_id="e", run_id="r", phase=1, agent_models={}, is_mock=True,
+                                              findings=findings, verification_results=[], trust_scores=trust,
+                                              action_target="t")
+    assert rec.verdict == "malicious" and rec.routing == "human_review" and rec.simulated_action is None
+
+
+def test_frontend_plain_escapes_markdown():
+    from frontend.view import plain
+    assert plain("[click](http://x) **b**") == "\\[click\\]\\(http://x\\) \\*\\*b\\*\\*"
