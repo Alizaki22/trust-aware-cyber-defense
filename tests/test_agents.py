@@ -99,10 +99,10 @@ PROFILES = {"profiles": {"udp|dns": {"n": 100, "numeric": {"sbytes": [100, 200],
                                      "sets": {"state": ["INT"], "sttl": ["254"], "dttl": ["0"]}}}}
 
 
-def test_behavioral_within_baseline_abstains_not_benign():
+def test_behavioral_within_baseline_is_low_confidence_benign():
     f = BehavioralAgent(PROFILES).analyze(event())
-    assert (f.verdict, f.classification, f.confidence) == ("unknown", "within_baseline", "none")
-    assert f.evidence  # still cites the checked profile fields (verifiable)
+    assert (f.verdict, f.classification, f.confidence) == ("benign", "within_baseline", "low")
+    assert f.evidence  # cites the checked profile fields (verifiable)
 
 
 def test_behavioral_deviation_is_suspicious_never_malicious():

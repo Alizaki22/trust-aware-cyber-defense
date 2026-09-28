@@ -8,13 +8,18 @@ Baseline lookup order:
 
 A feature deviates if a numeric value is outside the baseline's
 [1st, 99th] percentile range, or a categorical value (state/sttl/dttl) was
-never seen in the baseline. >=2 deviations -> "suspicious" (medium;
->=4 -> high). 0-1 deviations -> abstain (verdict "unknown",
-classification "within_baseline"): "no anomaly" is not evidence of
-benign, just as "no IOC match" is not (AGENT_SPECIFICATION). It never says
-"malicious" or "benign": an anomaly is one input, not a final verdict.
-Rationale measured on the VALIDATION calibration subset (192 events):
-suspicious votes were 18/20 correct, benign votes only 17/136 correct.
+never seen in the baseline.
+  >=2 deviations -> "suspicious" (medium; >=4 -> high). Never "malicious":
+                    an anomaly is one input, not a final verdict.
+  0-1 deviations -> "benign", confidence "low", classification
+                    "within_baseline": the behavioural signal says the flow
+                    looks like the normal profile.
+Reporting "within baseline" as a low-confidence vote (instead of abstaining)
+lets the trust mechanism decide how much this weak signal counts: its
+historical accuracy is measured on the calibration subset like every other
+agent's. Abstaining here left UNSW-NB15 events with at most two voters, so
+every disagreement was a 1-vs-1 tie and trust could only break ties.
+No baseline -> abstain ("no baseline available" is not "normal").
 """
 from __future__ import annotations
 
@@ -93,11 +98,12 @@ class BehavioralAgent(BaseAgent):
             evidence = ", ".join(f"{f}={fields[f]}" for f in deviations)
             reasoning = f"{n} of {len(checked)} checked features fall outside the {label}: {', '.join(deviations)}."
         else:
-            verdict, classification, confidence = "unknown", "within_baseline", "none"
+            verdict, classification, confidence = "benign", "within_baseline", "low"
             cited = [f for f in ("proto", "service", "state") if f in fields] or checked[:3]
             evidence = ", ".join(f"{f}={fields[f]}" for f in cited)
             reasoning = (f"{n} of {len(checked)} checked features fall outside the {label}. "
-                         "No anomaly was found; this is not evidence that the event is benign.")
+                         "The flow is consistent with the normal-traffic baseline; this is a weak "
+                         "behavioural signal, not proof that the event is benign.")
         return AgentFinding(agent=self.name, event_id=event.event_id, model=self.model_id,
                             verdict=verdict, classification=classification, evidence=evidence,
                             confidence=confidence, reasoning=reasoning)

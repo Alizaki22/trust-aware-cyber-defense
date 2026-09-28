@@ -10,7 +10,7 @@ ROUTING = {"simulated_action": ("⚙️", "Simulated action"),
            "human_review": ("👤", "Human review")}
 CONFIDENCE_BARS = {"high": "▮▮▮", "medium": "▮▮▯", "low": "▮▯▯", "none": "▯▯▯"}
 ABSTAIN_LABELS = {"no_match": "No known indicator", "no_indicators": "No indicators to look up",
-                  "no_baseline": "No baseline available", "within_baseline": "No anomaly found",
+                  "no_baseline": "No baseline available",
                   "agent_error": "Agent failed"}
 
 
@@ -18,6 +18,8 @@ def verdict_label(verdict: str, classification: str = "") -> str:
     icon, text = VERDICT.get(verdict, ("⚪", verdict))
     if verdict == "unknown" and classification in ABSTAIN_LABELS:
         text = ABSTAIN_LABELS[classification]
+    elif verdict == "benign" and classification == "within_baseline":
+        text = "Benign (within baseline, weak signal)"
     return f"{icon} {text}"
 
 
