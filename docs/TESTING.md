@@ -179,24 +179,12 @@ pytest
 # Run with verbose output
 pytest -v
 
-# Run only unit tests
-pytest tests/unit/
-
-# Run only integration tests
-pytest tests/integration/
-
-# Run only scenario tests
-pytest tests/scenarios/
-
-# Run with coverage report
-pytest --cov=src --cov-report=term-missing
-
-# Run a specific test file
-pytest tests/unit/test_trust_model.py
-
-# Run a specific test function
-pytest tests/unit/test_trust_model.py::test_trust_score_calculation
+# Run one area (Phase 1 layout: flat tests/ directory)
+pytest tests/test_verification.py
+pytest tests/test_trust_and_recommendation.py::test_trust_flips_equal_weighted_outcome
 ```
+
+Phase 1 tests (112) are listed by area in `docs/PHASE1_IMPLEMENTATION.md` §13. The LLM is never called in tests: agents use `StubLLMClient`, and the real OpenAI-protocol path is tested against a local fake server. The real-data tests (`test_real_unsw_counts`, `test_real_reference_data_is_train_only`) run only when the official UNSW-NB15 CSVs are present in `data/raw/unsw_nb15/` (and, for the second, after `prepare-data`).
 
 ## Test Conventions
 

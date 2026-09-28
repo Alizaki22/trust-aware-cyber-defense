@@ -15,7 +15,7 @@ Specialized agents (Detection, Intelligence, Behavioral Analysis) analyze a secu
 ## Two Development Phases
 
 - **Phase 1 — Baseline:** built using a normal/base LLM. Establishes the multi-agent structure, verification, and trust mechanism.
-- **Phase 2 — Fine-Tuned System:** extends Phase 1 by introducing a fine-tuned open-source LLM (parameter-efficient fine-tuning, e.g. LoRA/QLoRA) and compares results against the Phase 1 baseline. Which agent(s) use the fine-tuned model is **TO BE DECIDED**.
+- **Phase 2 — Fine-Tuned System:** extends Phase 1 by introducing a fine-tuned open-source LLM (parameter-efficient fine-tuning, e.g. LoRA/QLoRA) and compares results against the Phase 1 baseline. The fine-tuned model is used by the **Detection agent only** (team decision; see `docs/PHASE1_IMPLEMENTATION.md`).
 
 Phase 1 is the baseline for Phase 2 — Phase 2 extends the same system rather than rebuilding it.
 
@@ -58,35 +58,28 @@ This is a defensive, academic project. The system only ever recommends or simula
 ## Repository Structure
 
 ```
-docs/
-  PROJECT_SCOPE.md
-  ARCHITECTURE.md
-  SYSTEM_ARCHITECTURE.md
-  DECISIONS.md
-  RESEARCH.md
-  THREAT_MODEL.md
-  AGENT_DESIGN.md
-  API_REFERENCE.md
-  DATASET.md
-  DEVELOPMENT_GUIDE.md
-  EXPERIMENTS.md
-  LLM_FINE_TUNING.md
-  TESTING.md
-  architecture/
-    AGENT_SPECIFICATION.md
-    TRUST_MODEL.md
-    DATA_FLOW.md
-.github/
-  PULL_REQUEST_TEMPLATE.md
-  ISSUE_TEMPLATE/ISSUE_TEMPLATE.md
-AGENTS.md
-CONTRIBUTING.md
-CODE_OF_CONDUCT.md
-SECURITY.md
-README.md
+src/                     Phase 1 implementation (python -m src.cli ...)
+  models/                Pydantic schemas (SecurityEvent, AgentFinding, FinalRecommendation, ...)
+  agents/                detection (LLM), intelligence, behavioral, verification (rules), prompts
+  trust/                 trust formula + calibration-based historical accuracy
+  recommendation/        trust-weighted vs equal-weighted vote, routing
+  coordinator/           pipeline orchestration
+  data/unsw_nb15.py      UNSW-NB15 preparation, leakage checks, frozen subsets
+  evaluation/            the four metrics + calibration/evaluation runs
+  utils/llm_client.py    OpenAI-compatible client (Qwen3-4B-Instruct-2507) + offline stub
+  api.py, pipeline.py, config.py, cli.py
+frontend/                Streamlit app (app.py) + display helpers
+tests/                   pytest suite (112 tests)
+data/
+  threat_intel/, baselines/, events/   small SYNTHETIC reference data (committed)
+  eval/                  frozen evaluation/calibration subset ids (committed)
+  raw/, splits/, processed/            official CSVs and generated files (gitignored)
+docs/                    project documentation (PHASE1_IMPLEMENTATION.md = how Phase 1 works)
+  architecture/, frontend/
+runs/                    calibration and evaluation outputs (gitignored)
+.github/  AGENTS.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md  README.md
+requirements.txt  pyproject.toml
 ```
-
-Application source code does not exist yet — the current state of the project is the documentation foundation above.
 
 ## Documentation
 
@@ -107,13 +100,28 @@ Application source code does not exist yet — the current state of the project 
 - [`docs/RESEARCH.md`](docs/RESEARCH.md) — research foundation
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — threats and mitigations
 - [`AGENTS.md`](AGENTS.md) — instructions for AI coding agents working in this repo
+- [`docs/PHASE1_IMPLEMENTATION.md`](docs/PHASE1_IMPLEMENTATION.md) — how the implemented Phase 1 baseline works (schemas, data, trust, metrics, commands)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and Git workflow guide
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — community standards
 - [`SECURITY.md`](SECURITY.md) — security policy and reporting
 
 ## Project Status
 
-📄 Documentation foundation stage — decisions finalized (see `docs/DECISIONS.md`). No application code has been written yet; Phase 1 implementation is the next step. Two items remain genuinely open and tracked in `docs/DECISIONS.md`: which agent(s) receive the fine-tuned model in Phase 2 (D-010), and the project license (D-012).
+🧪 **Phase 1 baseline implemented** (UNSW-NB15 · Qwen3-4B-Instruct-2507 · four agents · trust/verification · evaluation · Streamlit frontend). The pipeline and all four metrics are tested end to end; **real Qwen3-4B-Instruct-2507 baseline results have not been produced yet** (see `docs/PHASE1_IMPLEMENTATION.md` §14). Phase 2 (Detection fine-tuning) is not started. The project license (D-012) is still open.
+
+### Quick start
+
+```bash
+pip install -r requirements.txt
+# put UNSW_NB15_training-set.csv and UNSW_NB15_testing-set.csv in data/raw/unsw_nb15/
+python -m src.cli prepare-data && python -m src.cli validate-data
+vllm serve Qwen/Qwen3-4B-Instruct-2507          # or see PHASE1_IMPLEMENTATION.md §6 for Ollama
+python -m src.cli calibrate && python -m src.cli evaluate
+streamlit run frontend/app.py
+pytest
+```
+
+Without a model server, add `--backend stub` (CLI) or set `LLM_BACKEND=stub` (Streamlit) to run the pipeline with a clearly labelled stub Detection model. Full details: [`docs/PHASE1_IMPLEMENTATION.md`](docs/PHASE1_IMPLEMENTATION.md).
 
 ## Team
 

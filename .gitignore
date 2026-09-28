@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+
+# UNSW-NB15 downloaded/generated data
+data/raw/unsw_nb15/*.csv
+data/splits/
+data/fine_tuning/

@@ -1,0 +1,38 @@
+[
+  {
+    "event_id": "demo-001-known-bad-ip",
+    "timestamp": "2026-09-20T02:14:07Z",
+    "event_type": "network_flow",
+    "source_ip": "203.0.113.45",
+    "destination_ip": "192.0.2.10",
+    "destination_port": 22,
+    "protocol": "tcp",
+    "entity": "srv-web-01",
+    "raw_content": "dur=58.3, proto=tcp, service=ssh, state=INT, spkts=1872, dpkts=1860, sbytes=161240, dbytes=210880, rate=64.1, sttl=254, dttl=252, sload=22125.5, dload=28936.1, tcprtt=0.12",
+    "metadata": {"source": "SYNTHETIC", "scenario": "Known-bad source IP, SSH volume far above the host baseline"}
+  },
+  {
+    "event_id": "demo-002-large-upload",
+    "timestamp": "2026-09-21T14:03:55Z",
+    "event_type": "network_flow",
+    "source_ip": "192.0.2.77",
+    "destination_ip": "198.51.100.20",
+    "destination_port": 443,
+    "protocol": "tcp",
+    "entity": "laptop-fin-07",
+    "raw_content": "dur=2460.0, proto=tcp, service=ssl, state=FIN, spkts=1240000, dpkts=41000, sbytes=1800000000, dbytes=3100000, rate=520.7, sttl=62, dttl=252, sload=5853658.5, dload=10081.3, tcprtt=0.04",
+    "metadata": {"source": "SYNTHETIC", "scenario": "Very large upload from a finance laptop; IP not in the IOC list"}
+  },
+  {
+    "event_id": "demo-003-ordinary-web",
+    "timestamp": "2026-09-22T10:12:01Z",
+    "event_type": "network_flow",
+    "source_ip": "192.0.2.15",
+    "destination_ip": "192.0.2.10",
+    "destination_port": 80,
+    "protocol": "tcp",
+    "entity": "srv-web-01",
+    "raw_content": "dur=0.42, proto=tcp, service=http, state=FIN, spkts=10, dpkts=12, sbytes=1100, dbytes=14500, rate=50.0, sttl=31, dttl=29, sload=20952.4, dload=276190.5, tcprtt=0.02",
+    "metadata": {"source": "SYNTHETIC", "scenario": "Ordinary web request within the host baseline"}
+  }
+]

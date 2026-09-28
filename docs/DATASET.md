@@ -1,6 +1,6 @@
 # Dataset
 
-This document describes the datasets considered, selected, and used in this project. No dataset has been finalized — this document tracks candidates, requirements, and decisions as they evolve.
+This document describes the datasets considered, selected, and used in this project. **UNSW-NB15 is the selected primary Detection dataset (team decision).** The implemented preprocessing methodology is documented in `docs/PHASE1_IMPLEMENTATION.md` §5; this document keeps the candidate analysis for reference.
 
 ## Dataset Requirements
 
@@ -152,11 +152,11 @@ See `docs/LLM_FINE_TUNING.md` for training data volume and quality requirements.
 
 | Decision | Status |
 |---|---|
-| Primary Detection Agent dataset | TO BE DECIDED — CIC-IDS2017 and UNSW-NB15 are candidates |
-| Threat intelligence data source | TO BE DECIDED — likely synthetic |
-| Behavioral baseline data source | TO BE DECIDED — likely synthetic |
-| Phase 2 fine-tuning dataset | TO BE DECIDED — depends on which agent is fine-tuned (D-010) |
-| Data preprocessing approach | TO BE DECIDED — depends on selected dataset |
+| Primary Detection Agent dataset | **DECIDED: UNSW-NB15** (official training/testing partition) |
+| Threat intelligence data source | Phase 1: synthetic IOC list `data/threat_intel/ioc_synthetic.json` |
+| Behavioral baseline data source | Phase 1: (proto, service) profiles learned from UNSW-NB15 train-split Normal records + synthetic entity baselines |
+| Phase 2 fine-tuning dataset | UNSW-NB15 `data/splits/train.jsonl` / `validation.jsonl` (Detection agent) |
+| Data preprocessing approach | Implemented — `src/data/unsw_nb15.py`, see `docs/PHASE1_IMPLEMENTATION.md` §5 |
 
 ## Related Documentation
 

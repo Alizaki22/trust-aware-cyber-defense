@@ -197,7 +197,7 @@ In Phase 1, the system is as simple as possible:
 
 ## Phase 2 Implementation
 
-Phase 2 reuses the same architecture. The **only** change is that one or more agents (TO BE DECIDED — see `docs/DECISIONS.md`, D-010) use a fine-tuned model instead of the base LLM:
+Phase 2 reuses the same architecture. The **only** change is that the Detection agent (`docs/DECISIONS.md`, D-010) uses a fine-tuned model instead of the base LLM:
 
 - The `LLM Client` module supports loading either a base model via API or a locally loaded fine-tuned model via Hugging Face Transformers.
 - The agent's code does not change — only the model it calls.

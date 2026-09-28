@@ -1,0 +1,11 @@
+[project]
+name = "trust-aware-cyber-defense"
+version = "0.1.0"
+description = "Fine-Tuned Trust-Aware LLM Agents for Secure Multi-Agent Cyber Defense - Phase 1 baseline"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]

@@ -4,6 +4,8 @@
 
 This document records important decisions agreed upon by the team, and clearly marks decisions that are still pending team approval. No entry in this log represents a fabricated or assumed team agreement — anything not yet actually decided is marked **PROPOSED — REQUIRES TEAM APPROVAL** or **TO BE DECIDED**.
 
+> **Phase 1 update:** the team's four locked decisions are recorded below as D-010 (updated), D-014, D-015 and D-016. The technical decisions made while implementing Phase 1 are summarised as D-017 and listed in full in `docs/PHASE1_IMPLEMENTATION.md` §17. D-013 is left free for the frontend-technology decision proposed in pending PR #8, which also edits this file.
+
 ## Decision Log
 
 | ID | Decision | Status |
@@ -18,9 +20,13 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-007 | Technology stack (language, framework, base LLM, etc.) | DECIDED BY THE TEAM |
 | D-008 | Three-student task distribution | DECIDED BY THE TEAM AND APPROVED BY THE MENTOR |
 | D-009 | Git branching model (main / development / feature branches) | DECIDED BY THE TEAM |
-| D-010 | Phase 2 fine-tuned-model agent assignment | TO BE DECIDED |
+| D-010 | Phase 2 fine-tuned-model agent assignment: Detection agent only | DECIDED BY THE TEAM |
 | D-011 | All system actions are simulated, never real | DECIDED BY THE TEAM |
 | D-012 | Project license | NOT YET DECIDED |
+| D-014 | Primary Detection dataset: UNSW-NB15 | DECIDED BY THE TEAM |
+| D-015 | Base LLM: Qwen3-4B-Instruct-2507 (Phase 1 baseline and Phase 2 starting point) | DECIDED BY THE TEAM |
+| D-016 | Evaluation metrics: Macro-F1, schema-valid output rate, evidence grounding rate, trust impact rate | DECIDED BY THE TEAM |
+| D-017 | Phase 1 implementation decisions (P1-01 … P1-22) | IMPLEMENTED — PENDING TEAM REVIEW (Phase 1 PR) |
 
 ---
 
@@ -123,6 +129,10 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Reason:** This stack is lightweight, Python-based, suitable for LLM/fine-tuning work, and realistic for three students working under a 10-day development schedule.
 
+**Base LLM:** decided in D-015 (Qwen3-4B-Instruct-2507). Phase 1 serves it on a local OpenAI-compatible endpoint (vLLM or Ollama) and calls it through the OpenAI SDK, which resolves the API-key action item below without per-call cost.
+
+**Additional Phase 1 dependencies (pending team approval under "additional technologies require team approval"):** `pandas` (UNSW-NB15 processing) and `streamlit` (frontend, see the D-013 proposal in PR #8). Versions are pinned in `requirements.txt`.
+
 **Action item (not a decision change):** Using the OpenAI SDK for Phase 1 requires a funded API key with real per-call cost. The team should confirm who provides/pays for this key (or decide to point the same client at a free/local OpenAI-compatible endpoint instead) before Phase 1 implementation begins — this blocks the very first agent-integration task.
 
 **Status:** DECIDED
@@ -178,11 +188,11 @@ The responsibilities may be adjusted when necessary based on project requirement
 
 ### D-010 — Phase 2 Fine-Tuned-Model Agent Assignment
 
-**Decision:** Not yet made. Phase 2 will integrate a fine-tuned open-source LLM into the existing Phase 1 architecture, but which agent(s) (Detection, Intelligence, Behavioral Analysis, and/or Verification) will actually use the fine-tuned model has not been decided.
+**Decision:** In Phase 2, **only the Detection agent** uses the fine-tuned model. Intelligence, Behavioral Analysis and Verification are unchanged between phases.
 
-**Context:** The final choice depends on dataset availability, hardware, training feasibility, time, student skill level, experimental design, and educational value. No document should assume a specific agent is fine-tuned by default.
+**Context:** The choice considered dataset availability, hardware, training feasibility, time, student skill level, experimental design, and educational value. Detection is the only agent with a labelled dataset (UNSW-NB15, D-014), and changing one agent keeps the Phase 1 → Phase 2 comparison attributable to fine-tuning (D-005).
 
-**Status:** TO BE DECIDED
+**Status:** DECIDED BY THE TEAM
 
 ---
 
@@ -201,3 +211,39 @@ The responsibilities may be adjusted when necessary based on project requirement
 **Decision:** Not yet made. No license has been chosen or added to the repository, though it is public.
 
 **Status:** NOT YET DECIDED
+
+---
+
+### D-014 — Primary Detection Dataset
+
+**Decision:** The Detection agent is trained (Phase 2) and evaluated (Phases 1 and 2) on **UNSW-NB15**, using the official training/testing partition files. The official testing file is the test set; validation is carved from the training file only.
+
+**Implementation:** leakage-safe preprocessing in `src/data/unsw_nb15.py` (deduplication before splitting, removal of training records whose model input occurs in the test file, stratified group split, cross-split overlap assertion). See `docs/PHASE1_IMPLEMENTATION.md` §5.
+
+**Status:** DECIDED BY THE TEAM
+
+---
+
+### D-015 — Base LLM
+
+**Decision:** **Qwen3-4B-Instruct-2507** (`Qwen/Qwen3-4B-Instruct-2507`, Apache-2.0). The un-tuned model is the Phase 1 baseline; Phase 2 fine-tunes the same model for the Detection agent, so the phases differ only by fine-tuning (D-005).
+
+**Status:** DECIDED BY THE TEAM
+
+---
+
+### D-016 — Evaluation Metrics
+
+**Decision:** Four metrics: **Macro-F1** (Detection, 10 UNSW-NB15 classes), **schema-valid output rate**, **evidence grounding rate** and **trust impact rate**. Exact definitions, numerators/denominators and limitations: `docs/PHASE1_IMPLEMENTATION.md` §10.
+
+**Status:** DECIDED BY THE TEAM
+
+---
+
+### D-017 — Phase 1 Implementation Decisions
+
+**Decision:** The technical choices made to implement Phase 1 within D-001 … D-016 — schemas, agent implementations (Detection = LLM; Intelligence, Behavioral Analysis and Verification = rules), label vocabulary, reference data learned from the train split only, trust weights and calibration, routing, metric definitions, reproducibility rules — are listed as P1-01 … P1-22 in `docs/PHASE1_IMPLEMENTATION.md` §17, each with its rationale.
+
+**Context:** They were made under the team's delegation to finalise Phase 1 details. They do not change any team decision above. They are defaults, not tuned or scientifically validated values, and the team reviews them in the Phase 1 pull request.
+
+**Status:** IMPLEMENTED — PENDING TEAM REVIEW (Phase 1 PR)
