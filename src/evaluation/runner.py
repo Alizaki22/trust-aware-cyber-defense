@@ -38,7 +38,18 @@ def run_calibration(config: SystemConfig, detection_llm=None, limit=None, log=pr
     return path
 
 
-def run_evaluation(config: SystemConfig, detection_llm=None, limit=None, run_id=None, log=print) -> Path:
+class CalibrationMissingError(RuntimeError):
+    """A real (non-stub) evaluation needs measured historical accuracy."""
+
+
+def run_evaluation(config: SystemConfig, detection_llm=None, limit=None, run_id=None, log=print,
+                   allow_uncalibrated: bool = False) -> Path:
+    real_model = detection_llm is None and config.llm_backend != "stub"
+    if real_model and not allow_uncalibrated and not config.calibration_path.exists():
+        raise CalibrationMissingError(
+            f"No calibration file for this configuration: {config.calibration_path}\n"
+            "Run `python -m src.cli calibrate` with the same model first, or pass "
+            "--allow-uncalibrated to use the default trust score (not valid for reported results).")
     if run_id is None:
         run_id = datetime.now(timezone.utc).strftime(f"phase{config.phase}-%Y%m%dT%H%M%SZ")
         if detection_llm is None and config.llm_backend == "stub":
@@ -81,7 +92,7 @@ def format_summary(m: dict) -> str:
     return "\n".join([
         f"run {m.get('run_id')}  n={m['n_events']}{warn}",
         f"  Macro-F1 (Detection, {len(m['macro_f1_detection']['classes'])} classes): {m['macro_f1_detection']['value']}",
-        f"  Schema-valid rate: first attempt {s['first_attempt']['value']} ({s['first_attempt']['numerator']}/{s['first_attempt']['denominator']}), after retry {s['after_retry']['value']}",
+        f"  Schema-valid rate: first attempt {s['first_attempt']['value']} ({s['first_attempt']['numerator']}/{s['first_attempt']['denominator']}), after retry {s['after_retry']['value']}; transport failures excluded: {s.get('transport_failures_excluded', 0)}",
         f"  Evidence grounding rate: {m['evidence_grounding_rate']['value']} ({m['evidence_grounding_rate']['numerator']}/{m['evidence_grounding_rate']['denominator']})",
         f"  Trust impact rate: {m['trust_impact_rate']['value']} ({m['trust_impact_rate']['numerator']}/{m['trust_impact_rate']['denominator']}); when changed: trust right {m['trust_impact_rate']['when_changed']['trust_weighted_correct']}, equal right {m['trust_impact_rate']['when_changed']['equal_weighted_correct']}",
         f"  System binary macro-F1 (secondary): {m['secondary']['system_binary_macro_f1']}",

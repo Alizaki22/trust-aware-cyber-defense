@@ -53,3 +53,11 @@ def test_calibrate_then_evaluate_writes_reproducible_run(stub_config):
     assert "llm_api_key" not in config and config["trust_history_source"].endswith(".json")
     lines = (run_dir / "results.jsonl").read_text().splitlines()
     assert len(lines) == metrics["n_events"] > 0
+
+
+def test_real_evaluation_refuses_to_run_without_calibration(stub_config):
+    import pytest
+    from src.evaluation.runner import CalibrationMissingError, run_evaluation
+    real = stub_config.model_copy(update={"llm_backend": "openai"})
+    with pytest.raises(CalibrationMissingError):
+        run_evaluation(real, log=lambda *_: None)

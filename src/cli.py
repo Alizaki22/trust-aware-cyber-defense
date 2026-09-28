@@ -29,6 +29,8 @@ def main(argv=None) -> int:
         p.add_argument("--limit", type=int, help="only the first N events (smoke runs)")
         if name == "evaluate":
             p.add_argument("--run-id")
+            p.add_argument("--allow-uncalibrated", action="store_true",
+                           help="use the default trust score if no calibration file exists (not for reported results)")
     p = sub.add_parser("analyze")
     group = p.add_mutually_exclusive_group(required=True)
     group.add_argument("--event", type=Path)
@@ -60,8 +62,13 @@ def main(argv=None) -> int:
         run_calibration(config, limit=args.limit)
         return 0
     if args.command == "evaluate":
-        from src.evaluation.runner import run_evaluation
-        run_evaluation(config, limit=args.limit, run_id=args.run_id)
+        from src.evaluation.runner import CalibrationMissingError, run_evaluation
+        try:
+            run_evaluation(config, limit=args.limit, run_id=args.run_id,
+                           allow_uncalibrated=args.allow_uncalibrated)
+        except CalibrationMissingError as error:
+            print(f"ERROR: {error}")
+            return 1
         return 0
     if args.command == "analyze":
         from src.api import analyze_event
