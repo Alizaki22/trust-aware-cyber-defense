@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import json
 import platform
 from datetime import datetime, timezone
@@ -11,8 +12,51 @@ from src.config import SystemConfig
 from src.data.unsw_nb15 import load_events
 from src.evaluation.metrics import compute_metrics
 from src.models import SecurityEvent
-from src.pipeline import build_coordinator, build_specialists
+from src.pipeline import build_coordinator, build_specialists, reference_paths
 from src.trust.trust_history import calibrate
+
+SPECIALISTS = ("detection", "intelligence", "behavioral")
+
+
+class CalibrationError(RuntimeError):
+    """The trust history needed for a valid evaluation is missing or stale."""
+
+
+class CalibrationMissingError(CalibrationError):
+    """A real (non-stub) evaluation needs measured historical accuracy."""
+
+
+class CalibrationMismatchError(CalibrationError):
+    """The calibration file was produced for different agents or reference data."""
+
+
+def calibration_fingerprint(config: SystemConfig, agent_models: dict) -> dict:
+    """What a calibration is only valid for: the specialists' engines and every
+    reference artifact they read (plus the frozen calibration subset)."""
+    paths = dict(reference_paths(config))
+    paths["calibration_ids"] = config.data_dir / "eval" / "phase1_calibration_ids.json"
+    files = {name: (hashlib.sha256(Path(p).read_bytes()).hexdigest() if Path(p).exists() else None)
+             for name, p in sorted(paths.items())}
+    return {"agent_models": {a: agent_models[a] for a in SPECIALISTS}, "reference_sha256": files}
+
+
+def check_calibration(config: SystemConfig, agent_models: dict) -> str | None:
+    """None if a matching calibration exists; raises CalibrationMismatchError if it
+    exists but is stale; returns a reason string if it is missing."""
+    path = config.calibration_path
+    if not path.exists():
+        return f"No calibration file for this configuration: {path}"
+    stored = json.loads(path.read_text()).get("fingerprint")
+    current = calibration_fingerprint(config, agent_models)
+    if stored != current:
+        changed = [k for k in ("agent_models",) if (stored or {}).get(k) != current[k]]
+        changed += [f"reference file '{name}'" for name, digest in current["reference_sha256"].items()
+                    if (stored or {}).get("reference_sha256", {}).get(name) != digest]
+        raise CalibrationMismatchError(
+            f"Calibration file {path} does not match the current configuration "
+            f"(changed: {', '.join(changed) or 'fingerprint missing'}).\n"
+            "Re-run `python -m src.cli calibrate` with the same model and data before evaluating.")
+    return None
 
 
 def _config_summary(config: SystemConfig, agent_models: dict) -> dict:
@@ -29,6 +73,7 @@ def run_calibration(config: SystemConfig, detection_llm=None, limit=None, log=pr
     models = {name: agent.model_id for name, agent in agents.items()}
     log(f"calibrating {list(agents)} on {len(events)} validation events ...")
     result = calibrate(agents, events, _config_summary(config, models))
+    result["fingerprint"] = calibration_fingerprint(config, models)
     path = config.calibration_path
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(result, indent=1))
@@ -38,29 +83,37 @@ def run_calibration(config: SystemConfig, detection_llm=None, limit=None, log=pr
     return path
 
 
-class CalibrationMissingError(RuntimeError):
-    """A real (non-stub) evaluation needs measured historical accuracy."""
-
-
 def run_evaluation(config: SystemConfig, detection_llm=None, limit=None, run_id=None, log=print,
                    allow_uncalibrated: bool = False) -> Path:
+    """Evaluate the frozen subset. A real (non-stub) evaluation refuses to run
+    without a matching calibration; a stale calibration is always refused.
+    ``allow_uncalibrated`` (explicit, CLI --allow-uncalibrated) lets a smoke run
+    proceed with the initial trust score; such runs are marked
+    ``valid_for_reporting: false`` and suffixed -UNCALIBRATED."""
     real_model = detection_llm is None and config.llm_backend != "stub"
-    if real_model and not allow_uncalibrated and not config.calibration_path.exists():
+    probe = build_specialists(config, detection_llm)
+    missing = check_calibration(config, {name: agent.model_id for name, agent in probe.items()})
+    if missing and real_model and not allow_uncalibrated:
         raise CalibrationMissingError(
-            f"No calibration file for this configuration: {config.calibration_path}\n"
-            "Run `python -m src.cli calibrate` with the same model first, or pass "
-            "--allow-uncalibrated to use the default trust score (not valid for reported results).")
+            f"{missing}\nRun `python -m src.cli calibrate` with the same model first. "
+            "(--allow-uncalibrated runs a smoke test with the initial trust score; "
+            "such a run is marked as not valid for reported results.)")
+    calibrated = missing is None
     if run_id is None:
         run_id = datetime.now(timezone.utc).strftime(f"phase{config.phase}-%Y%m%dT%H%M%SZ")
         if detection_llm is None and config.llm_backend == "stub":
             run_id += "-STUB"
+        if not calibrated:
+            run_id += "-UNCALIBRATED"
     coordinator = build_coordinator(config, detection_llm, run_id=run_id)
     run_dir = config.runs_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     events = load_events(config.data_dir / "processed" / "eval_events.jsonl", limit)
     (run_dir / "config.json").write_text(json.dumps({
         **_config_summary(config, coordinator.agent_models),
+        "calibrated": calibrated,
         "trust_history_source": coordinator.trust.history.source,
+        "trust_history_defaults": [a for a in SPECIALISTS if a not in coordinator.trust.history.accuracy],
         "trust_history": {a: coordinator.trust.history.get(a) for a in ("detection", "intelligence", "behavioral")},
         "eval_subset": "data/eval/phase1_eval_subset_ids.json", "n_events": len(events)}, indent=1))
 
@@ -80,6 +133,8 @@ def run_evaluation(config: SystemConfig, detection_llm=None, limit=None, run_id=
     metrics = compute_metrics(records)
     metrics["run_id"] = run_id
     metrics["is_mock"] = any(m.startswith("stub:") for m in coordinator.agent_models.values())
+    metrics["calibrated"] = calibrated
+    metrics["valid_for_reporting"] = calibrated and not metrics["is_mock"]
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=1))
     log(format_summary(metrics))
     log(f"wrote {run_dir}")
@@ -87,7 +142,8 @@ def run_evaluation(config: SystemConfig, detection_llm=None, limit=None, run_id=
 
 
 def format_summary(m: dict) -> str:
-    warn = "  [STUB MODEL - NOT A QWEN RESULT]" if m.get("is_mock") else ""
+    warn = ("  [STUB MODEL - NOT A QWEN RESULT]" if m.get("is_mock") else "") + \
+           ("" if m.get("calibrated", True) else "  [UNCALIBRATED - NOT VALID FOR REPORTING]")
     s = m["schema_valid_rate"]
     return "\n".join([
         f"run {m.get('run_id')}  n={m['n_events']}{warn}",

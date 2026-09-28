@@ -62,11 +62,11 @@ def main(argv=None) -> int:
         run_calibration(config, limit=args.limit)
         return 0
     if args.command == "evaluate":
-        from src.evaluation.runner import CalibrationMissingError, run_evaluation
+        from src.evaluation.runner import CalibrationError, run_evaluation
         try:
             run_evaluation(config, limit=args.limit, run_id=args.run_id,
                            allow_uncalibrated=args.allow_uncalibrated)
-        except CalibrationMissingError as error:
+        except CalibrationError as error:
             print(f"ERROR: {error}")
             return 1
         return 0
