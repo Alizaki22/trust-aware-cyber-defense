@@ -177,3 +177,46 @@ def test_build_intel_signatures_thresholds():
     assert sigs["udp|dns|INT|254|0"]["reputation"] == "malicious"
     assert sigs["tcp|-|FIN|31|29"]["reputation"] == "benign"
     assert "tcp|http|FIN|62|252" not in sigs and "arp|-|INT|0|0" not in sigs
+
+
+# ---------------- E4: Detection outcome categories
+def _seq_llm(*answers):
+    """Stub whose successive calls return answers; an Exception instance is raised."""
+    from src.utils.llm_client import LLMClient
+    class Seq(LLMClient):
+        model_id = "test:seq"
+        def __init__(self):
+            self.answers = list(answers)
+        def generate(self, system_prompt, user_prompt):
+            answer = self.answers.pop(0)
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+    return Seq()
+
+
+def test_detection_outcome_categories():
+    from src.utils.llm_client import LLMError
+    good = json.dumps({"verdict": "benign", "classification": "Normal", "evidence": "proto=tcp",
+                       "confidence": "low", "reasoning": "r"})
+    cases = [((good,), "valid", True, True), (("nonsense", good), "valid", True, False),
+             (("nonsense", "nonsense"), "schema_invalid", True, False),
+             ((LLMError("down"),), "transport_failure", False, False),
+             (("nonsense", LLMError("down")), "transport_failure", True, False)]
+    for answers, outcome, received, first_valid in cases:
+        agent = DetectionAgent(_seq_llm(*answers))
+        agent.analyze(event())
+        t = agent.last_trace
+        assert (t.outcome, t.first_response_received, t.first_attempt_valid) == (outcome, received, first_valid), answers
+
+
+def test_detection_crash_is_an_execution_failure(stub_config, demo_events):
+    from src.models import SecurityEvent
+    from src.pipeline import build_coordinator
+    coordinator = build_coordinator(stub_config)
+    def boom(system_prompt, user_prompt):
+        raise RuntimeError("bug")
+    coordinator.agents["detection"].llm.responder = boom
+    result = coordinator.process_event(SecurityEvent.model_validate(demo_events[0]))
+    assert coordinator.agents["detection"].last_trace.outcome == "execution_failure"
+    assert next(f for f in result.agent_findings if f.agent == "detection").error

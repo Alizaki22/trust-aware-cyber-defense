@@ -92,7 +92,8 @@ def format_summary(m: dict) -> str:
     return "\n".join([
         f"run {m.get('run_id')}  n={m['n_events']}{warn}",
         f"  Macro-F1 (Detection, {len(m['macro_f1_detection']['classes'])} classes): {m['macro_f1_detection']['value']}",
-        f"  Schema-valid rate: first attempt {s['first_attempt']['value']} ({s['first_attempt']['numerator']}/{s['first_attempt']['denominator']}), after retry {s['after_retry']['value']}; transport failures excluded: {s.get('transport_failures_excluded', 0)}",
+        f"  Schema-valid rate: first attempt {s['first_attempt']['value']} ({s['first_attempt']['numerator']}/{s['first_attempt']['denominator']}), after retry {s['after_retry']['value']}",
+        f"  Detection outcomes: " + ", ".join(f"{k} {v}" for k, v in s['outcomes'].items()),
         f"  Evidence grounding rate: {m['evidence_grounding_rate']['value']} ({m['evidence_grounding_rate']['numerator']}/{m['evidence_grounding_rate']['denominator']})",
         f"  Trust impact rate: {m['trust_impact_rate']['value']} ({m['trust_impact_rate']['numerator']}/{m['trust_impact_rate']['denominator']}); when changed: trust right {m['trust_impact_rate']['when_changed']['trust_weighted_correct']}, equal right {m['trust_impact_rate']['when_changed']['equal_weighted_correct']}",
         f"  System binary macro-F1 (secondary): {m['secondary']['system_binary_macro_f1']}",

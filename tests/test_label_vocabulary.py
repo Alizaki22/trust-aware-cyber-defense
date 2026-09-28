@@ -66,3 +66,4 @@ def test_out_of_vocabulary_label_is_schema_invalid_at_runtime():
                           raw_content="proto=tcp")
     finding = agent.analyze(event)
     assert finding.error and agent.last_trace.first_attempt_valid is False
+    assert agent.last_trace.outcome == "schema_invalid"

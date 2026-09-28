@@ -21,11 +21,19 @@ from src.utils.llm_client import LLMClient, LLMError, extract_json_object
 class DetectionTrace:
     """Per-event record used by evaluation (schema-valid rate) and run logs."""
     raw_responses: list[str] = field(default_factory=list)
+    # Outcome of the Detection call, one of:
+    #   "valid"             a schema-valid finding was parsed
+    #   "schema_invalid"    the model answered, but no answer parsed into the schema
+    #   "transport_failure" the model server failed (down, timeout, empty reply)
+    #   "execution_failure" anything else (e.g. an agent bug); the default, so an
+    #                       exception escaping analyze() is never mistaken for another outcome
+    outcome: str = "execution_failure"
+    first_response_received: bool = False  # attempt 1 produced a model answer to judge
     first_attempt_valid: bool = False
     final_valid: bool = False
     attempts: int = 0
     error: Optional[str] = None
-    transport_error: bool = False  # the model server failed; no response to judge
+    transport_error: bool = False  # the model server failed on some attempt
 
 
 def parse_model_output(text: str) -> DetectionModelOutput:
@@ -59,8 +67,11 @@ class DetectionAgent(BaseAgent):
             except LLMError as error:
                 trace.error = str(error)
                 trace.transport_error = True
+                trace.outcome = "transport_failure"
                 return self.error_finding(event, f"LLM call failed: {error}")
             trace.raw_responses.append(text)
+            if attempt == 1:
+                trace.first_response_received = True
             try:
                 output = parse_model_output(text)
             except (ValueError, ValidationError) as error:
@@ -68,8 +79,10 @@ class DetectionAgent(BaseAgent):
                 continue
             trace.first_attempt_valid = attempt == 1
             trace.final_valid = True
+            trace.outcome = "valid"
             trace.error = None
             return AgentFinding(agent=self.name, event_id=event.event_id, model=self.model_id,
                                 **output.model_dump())
+        trace.outcome = "schema_invalid"
         return self.error_finding(event, f"failed to parse structured output after "
                                          f"{self.max_attempts} attempts ({trace.error})")

@@ -8,10 +8,12 @@ Inputs: one record per evaluated event:
    finding vs attack_cat; unweighted mean of per-class F1 over the classes
    present in the ground truth. Invalid/unknown predictions count as wrong.
 2. Schema-valid output rate: events whose FIRST Detection response parses
-   into the finding schema / events where the model server returned a
-   response. Transport failures (server down, timeout) are excluded from the
-   denominator and reported separately; they still count as wrong in
-   Macro-F1. (After-retry rate also reported.)
+   into the Detection schema (exact keys, canonical enums, classification in
+   the UNSW-NB15 label set) / events whose first Detection call returned a
+   model response. Transport failures (server down, timeout, empty reply) and
+   other execution failures produced no response to judge: they are excluded
+   from the denominator and reported separately as outcomes, and still count
+   as wrong in Macro-F1. After-retry rate: valid / (valid + schema_invalid).
 3. Evidence grounding rate: schema-valid Detection findings that
    Verification marks verified_consistent / schema-valid Detection findings.
 4. Trust impact rate: events whose trust-weighted verdict differs from the
@@ -25,6 +27,7 @@ from src.data.unsw_nb15 import CLASSIFICATIONS
 
 _CANON = {c.lower(): c for c in CLASSIFICATIONS}
 THREAT = {"malicious", "suspicious"}
+DETECTION_OUTCOMES = ("valid", "schema_invalid", "transport_failure", "execution_failure")
 
 
 def normalize_class(value: str) -> str:
@@ -62,7 +65,8 @@ def binary_pred(verdict: str) -> str:
 def compute_metrics(records: list[dict]) -> dict:
     n = len(records)
     y_true, y_pred = [], []
-    first_valid = final_valid = grounded = transport_failures = 0
+    first_valid = first_judged = final_valid = grounded = 0
+    outcomes = Counter()
     changed = changed_trust_right = changed_equal_right = 0
     sys_true, sys_pred = [], []
     agent_stats = {a: Counter() for a in ("detection", "intelligence", "behavioral")}
@@ -79,8 +83,8 @@ def compute_metrics(records: list[dict]) -> dict:
         y_true.append(truth["attack_cat"])
         y_pred.append(normalize_class(detection["classification"]) if not detection.get("error") else "INVALID")
 
-        if trace.get("transport_error"):
-            transport_failures += 1
+        outcomes[trace.get("outcome", "execution_failure")] += 1
+        first_judged += bool(trace.get("first_response_received"))
         first_valid += bool(trace.get("first_attempt_valid"))
         if trace.get("final_valid"):
             final_valid += 1
@@ -114,9 +118,9 @@ def compute_metrics(records: list[dict]) -> dict:
         "macro_f1_detection": {"value": detection_f1["macro_f1"], "classes": labels,
                                "per_class": detection_f1["per_class"],
                                "invalid_predictions": y_pred.count("INVALID")},
-        "schema_valid_rate": {"first_attempt": _rate(first_valid, n - transport_failures),
-                              "after_retry": _rate(final_valid, n - transport_failures),
-                              "transport_failures_excluded": transport_failures},
+        "schema_valid_rate": {"first_attempt": _rate(first_valid, first_judged),
+                              "after_retry": _rate(outcomes["valid"], outcomes["valid"] + outcomes["schema_invalid"]),
+                              "outcomes": {k: outcomes[k] for k in DETECTION_OUTCOMES}},
         "evidence_grounding_rate": _rate(grounded, final_valid),
         "trust_impact_rate": {**_rate(changed, n),
                               "when_changed": {"trust_weighted_correct": changed_trust_right,
