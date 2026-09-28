@@ -6,12 +6,3 @@ __pycache__/
 data/raw/unsw_nb15/*.csv
 data/splits/
 data/fine_tuning/
-
-# Phase 1 generated artifacts (regenerate with `python -m src.cli prepare-data`)
-data/processed/
-runs/
-
-# Local configuration / tooling
-.env
-venv/
-.pytest_cache/

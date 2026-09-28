@@ -1,0 +1,5 @@
+# Phase 1 generated artifacts (regenerate with `python -m src.cli prepare-data`).
+# Kept here rather than in the root .gitignore so the root file stays identical
+# to the one in the pending dataset PRs (no merge conflict).
+*
+!.gitignore
