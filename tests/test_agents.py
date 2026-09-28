@@ -121,3 +121,12 @@ def test_behavioral_entity_baseline_takes_precedence():
     entities = {"entities": {"host-1": {"numeric": {"sbytes": [0, 10]}, "sets": {"state": ["FIN"]}}}}
     f = BehavioralAgent(PROFILES, entities).analyze(event(entity="host-1"))
     assert f.verdict == "suspicious" and "entity baseline" in f.reasoning
+
+
+def test_prompt_states_the_unsw_label_set():
+    """C1: the base model must be told the allowed labels (fair Phase 1 Macro-F1)."""
+    from src.agents.prompts import DETECTION_CLASSES
+    from src.data.unsw_nb15 import CLASSIFICATIONS
+    assert list(DETECTION_CLASSES) == CLASSIFICATIONS
+    for label in CLASSIFICATIONS:
+        assert label in DETECTION_INSTRUCTION
