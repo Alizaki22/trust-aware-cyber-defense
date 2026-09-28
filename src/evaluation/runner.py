@@ -152,5 +152,7 @@ def format_summary(m: dict) -> str:
         f"  Detection outcomes: " + ", ".join(f"{k} {v}" for k, v in s['outcomes'].items()),
         f"  Evidence grounding rate: {m['evidence_grounding_rate']['value']} ({m['evidence_grounding_rate']['numerator']}/{m['evidence_grounding_rate']['denominator']})",
         f"  Trust impact rate: {m['trust_impact_rate']['value']} ({m['trust_impact_rate']['numerator']}/{m['trust_impact_rate']['denominator']}); when changed: trust right {m['trust_impact_rate']['when_changed']['trust_weighted_correct']}, equal right {m['trust_impact_rate']['when_changed']['equal_weighted_correct']}",
+        f"    by kind: " + ", ".join(f"{k} {v}" for k, v in m['trust_impact_rate']['by_kind'].items())
+        + "; agents voting per event: " + ", ".join(f"{k}: {v}" for k, v in m['trust_impact_rate']['voters_per_event'].items()),
         f"  System binary macro-F1 (secondary): {m['secondary']['system_binary_macro_f1']}",
     ])

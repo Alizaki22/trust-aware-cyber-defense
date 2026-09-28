@@ -72,3 +72,21 @@ def test_detection_outcomes_are_reported_separately():
     assert s["first_attempt"] == {"value": 0.25, "numerator": 1, "denominator": 4}   # 4 judged first answers
     assert s["after_retry"] == {"value": 0.6667, "numerator": 2, "denominator": 3}  # valid / (valid + schema_invalid)
     assert sum(s["outcomes"].values()) == m["n_events"]
+
+
+def test_trust_impact_is_broken_down_by_kind():
+    """C2: a tie-break must never be reported as a majority reversal."""
+    def rec(eq, tw, changed=True, voters=3):
+        r = record("DoS", "DoS", final=tw, changed=changed, eq=eq)
+        findings = r["recommendation"]["agent_findings"]
+        for fnd in findings[voters:]:
+            fnd["verdict"] = "unknown"
+        for fnd in findings[:voters]:
+            fnd["verdict"] = fnd["verdict"] if fnd["verdict"] != "unknown" else "benign"
+        return r
+    m = compute_metrics([rec("benign", "malicious"), rec("unknown", "malicious", voters=2),
+                         rec("malicious", "unknown", voters=2), rec("malicious", "malicious", changed=False)])
+    t = m["trust_impact_rate"]
+    assert t["numerator"] == 3 and t["denominator"] == 4
+    assert t["by_kind"] == {"majority_reversed": 1, "tie_resolved": 1, "trust_tied": 1}
+    assert t["voters_per_event"] == {"2": 2, "3": 2}

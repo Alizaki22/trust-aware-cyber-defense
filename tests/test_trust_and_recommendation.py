@@ -144,3 +144,18 @@ def test_single_uncorroborated_threat_vote_goes_to_human_review():
 def test_frontend_plain_escapes_markdown():
     from frontend.view import plain
     assert plain("[click](http://x) **b**") == "\\[click\\]\\(http://x\\) \\*\\*b\\*\\*"
+
+
+def test_calibrated_trust_can_reverse_a_real_majority_on_unsw_like_voters():
+    """C2: with Intelligence voting, 2-vs-1 majorities exist and measured trust can reverse them.
+    Histories mirror the shape measured on the validation calibration subset:
+    Intelligence reliable, the low-confidence Behavioral benign vote weak."""
+    history = TrustHistory({"detection": 0.30, "intelligence": 1.0, "behavioral": 0.22})
+    findings = [f("detection", "benign"), f("intelligence", "malicious"), f("behavioral", "benign")]
+    ver = [v("detection", "verified_inconsistent"), v("intelligence", "verified_consistent"),
+           v("behavioral", "verified_consistent")]
+    rec = _recommend(findings, ver, history)
+    assert rec.equal_weighted.verdict == "benign" and not rec.equal_weighted.tie
+    assert rec.trust_weighted.verdict == "malicious" and rec.trust_changed_outcome
+    trust = {t.agent: t.total_score for t in rec.trust_scores}
+    assert trust["intelligence"] > trust["detection"] + trust["behavioral"]

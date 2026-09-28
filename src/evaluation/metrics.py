@@ -18,6 +18,12 @@ Inputs: one record per evaluated event:
    Verification marks verified_consistent / schema-valid Detection findings.
 4. Trust impact rate: events whose trust-weighted verdict differs from the
    equal-weighted verdict / evaluated events (+ which one was right).
+   Broken down by kind so tie-breaks are never presented as reversals:
+     majority_reversed  equal weighting reached a verdict, trust reached a different one
+     tie_resolved       equal weighting tied (no verdict), trust decided
+     trust_tied         equal weighting decided, trust weighting tied
+   Also reports how many agents voted per event (a 1-vs-1 disagreement can
+   only ever be a tie-break).
 """
 from __future__ import annotations
 
@@ -62,12 +68,27 @@ def binary_pred(verdict: str) -> str:
     return "attack" if verdict in THREAT else ("normal" if verdict == "benign" else "undetermined")
 
 
+CHANGE_KINDS = ("majority_reversed", "tie_resolved", "trust_tied")
+
+
+def change_kind(rec: dict) -> str:
+    """Classify a trust-changed outcome (see module docstring, metric 4)."""
+    equal, trust = rec["equal_weighted"]["verdict"], rec["trust_weighted"]["verdict"]
+    if equal == "unknown":
+        return "tie_resolved"
+    if trust == "unknown":
+        return "trust_tied"
+    return "majority_reversed"
+
+
 def compute_metrics(records: list[dict]) -> dict:
     n = len(records)
     y_true, y_pred = [], []
     first_valid = first_judged = final_valid = grounded = 0
     outcomes = Counter()
     changed = changed_trust_right = changed_equal_right = 0
+    change_kinds = Counter()
+    voters_per_event = Counter()
     sys_true, sys_pred = [], []
     agent_stats = {a: Counter() for a in ("detection", "intelligence", "behavioral")}
     routing = Counter()
@@ -93,8 +114,11 @@ def compute_metrics(records: list[dict]) -> dict:
         truth_bin = binary_truth(truth["label"])
         sys_true.append(truth_bin)
         sys_pred.append(binary_pred(rec["verdict"]))
+        voters_per_event[sum(1 for f in rec["agent_findings"]
+                                 if not f.get("error") and f["verdict"] != "unknown")] += 1
         if rec["trust_changed_outcome"]:
             changed += 1
+            change_kinds[change_kind(rec)] += 1
             changed_trust_right += binary_pred(rec["trust_weighted"]["verdict"]) == truth_bin
             changed_equal_right += binary_pred(rec["equal_weighted"]["verdict"]) == truth_bin
         routing[rec["routing"]] += 1
@@ -124,7 +148,9 @@ def compute_metrics(records: list[dict]) -> dict:
         "evidence_grounding_rate": _rate(grounded, final_valid),
         "trust_impact_rate": {**_rate(changed, n),
                               "when_changed": {"trust_weighted_correct": changed_trust_right,
-                                               "equal_weighted_correct": changed_equal_right}},
+                                               "equal_weighted_correct": changed_equal_right},
+                              "by_kind": {k: change_kinds[k] for k in CHANGE_KINDS},
+                              "voters_per_event": {str(k): voters_per_event[k] for k in sorted(voters_per_event)}},
         "secondary": {
             "system_binary_macro_f1": system_f1["macro_f1"],
             "system_binary_per_class": system_f1["per_class"],
