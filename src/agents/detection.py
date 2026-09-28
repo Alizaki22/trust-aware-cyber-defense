@@ -25,6 +25,7 @@ class DetectionTrace:
     final_valid: bool = False
     attempts: int = 0
     error: Optional[str] = None
+    transport_error: bool = False  # the model server failed; no response to judge
 
 
 def parse_model_output(text: str) -> ModelFindingOutput:
@@ -56,6 +57,7 @@ class DetectionAgent(BaseAgent):
                 text = self.llm.generate(DETECTION_INSTRUCTION, prompt)
             except LLMError as error:
                 trace.error = str(error)
+                trace.transport_error = True
                 return self.error_finding(event, f"LLM call failed: {error}")
             trace.raw_responses.append(text)
             try:

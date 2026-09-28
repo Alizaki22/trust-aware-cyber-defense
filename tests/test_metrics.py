@@ -44,3 +44,19 @@ def test_four_metrics():
     # Normal: P=1/2 R=1 -> 2/3 ; DoS: P=1 R=1/2 -> 2/3 ; Exploits: 0
     assert m["macro_f1_detection"]["value"] == pytest.approx((2 / 3 + 2 / 3 + 0) / 3, abs=1e-4)
     assert m["macro_f1_detection"]["invalid_predictions"] == 1
+
+
+def test_transport_failures_are_excluded_from_schema_valid_rate():
+    from src.evaluation.metrics import compute_metrics
+    def record(trace, cls="Normal", label=0):
+        det = {"agent": "detection", "verdict": "benign", "classification": cls, "error": None}
+        rec = {"agent_findings": [det], "verification_results": [{"agent": "detection", "status": "verified_consistent"}],
+               "verdict": "benign", "trust_changed_outcome": False, "routing": "further_verification",
+               "trust_weighted": {"verdict": "benign"}, "equal_weighted": {"verdict": "benign"}}
+        return {"ground_truth": {"label": label, "attack_cat": "Normal"}, "recommendation": rec, "detection_trace": trace}
+    ok = {"first_attempt_valid": True, "final_valid": True, "transport_error": False}
+    down = {"first_attempt_valid": False, "final_valid": False, "transport_error": True}
+    bad = {"first_attempt_valid": False, "final_valid": False, "transport_error": False}
+    m = compute_metrics([record(ok), record(down), record(bad)])
+    assert m["schema_valid_rate"]["first_attempt"] == {"value": 0.5, "numerator": 1, "denominator": 2}
+    assert m["schema_valid_rate"]["transport_failures_excluded"] == 1
