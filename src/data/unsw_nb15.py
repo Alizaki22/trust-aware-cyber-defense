@@ -371,7 +371,7 @@ def validate_split_files(splits_dir: Path, log=print) -> bool:
         ok = ok and passed
     for a, b in [("train", "validation"), ("train", "test"), ("validation", "test")]:
         shared = len(inputs[a] & inputs[b])
-        log(f"{'PASS' if not shared else 'FAIL'} {a} ∩ {b}: {shared} shared inputs")
+        log(f"{'PASS' if not shared else 'FAIL'} {a} & {b}: {shared} shared inputs")
         ok = ok and not shared
     return ok
 
