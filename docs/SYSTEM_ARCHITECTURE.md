@@ -162,9 +162,9 @@ graph TB
 |---|---|---|
 | `src/agents/base.py` | Abstract base class defining agent interface | Pydantic models |
 | `src/agents/detection.py` | Detection Agent — classifies security events | Base agent, LLM client |
-| `src/agents/intelligence.py` | Intelligence Agent — correlates against threat intelligence | Base agent, LLM client, threat intel data |
-| `src/agents/behavioral.py` | Behavioral Analysis Agent — compares against baselines | Base agent, LLM client, baseline data |
-| `src/agents/verification.py` | Verification Agent — checks finding consistency | Base agent, LLM client (or plain code) |
+| `src/agents/intelligence.py` | Intelligence Agent — correlates against threat intelligence | Base agent, threat intel data |
+| `src/agents/behavioral.py` | Behavioral Analysis Agent — compares against baselines | Base agent, baseline data |
+| `src/agents/verification.py` | Verification Agent — checks finding consistency | Base agent, plain code |
 | `src/coordinator/coordinator.py` | Dispatches events to agents, collects findings | All agent modules |
 | `src/trust/trust_model.py` | Calculates trust scores from three factors | Trust history |
 | `src/trust/trust_history.py` | Stores and retrieves historical accuracy data | JSON/JSONL storage |
@@ -176,8 +176,8 @@ graph TB
 
 In Phase 1, the system is as simple as possible:
 
-- **One LLM client** wrapping the OpenAI SDK (or compatible API), called with different role-specific prompts for each agent.
-- **Verification** implemented as plain Python code (not LLM calls) unless the team decides otherwise.
+- **One LLM client** wrapping the OpenAI SDK (or compatible API), called with role-specific prompts for the Detection agent.
+- **Intelligence, Behavioral Analysis, and Verification** are implemented as plain Python code (rule-based deterministic lookups).
 - **Trust evaluation** implemented as plain Python code with the conceptual formula from `docs/architecture/TRUST_MODEL.md`.
 - **Data storage** as JSON/JSONL files — no database.
 - **No agent framework** — plain Python modules with a shared base class.

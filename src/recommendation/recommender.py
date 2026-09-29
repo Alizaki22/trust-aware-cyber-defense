@@ -105,8 +105,18 @@ class RecommendationEngine:
                   if routing == "simulated_action" else None)
         summary = "; ".join(f"{f.agent}: {f.verdict}" for f in findings) if disagreement else None
         changed = trust_weighted.verdict != equal_weighted.verdict
+        if changed:
+            if equal_weighted.tie:
+                impact = " (trust resolved a tie)"
+            elif trust_weighted.tie:
+                impact = " (trust resulted in a tie)"
+            else:
+                impact = " (trust reversed the majority)"
+        else:
+            impact = ""
+            
         reasoning = (f"Trust-weighted vote: {verdict}; equal-weighted vote: {equal_weighted.verdict}"
-                     f"{' (trust changed the outcome)' if changed else ''}. {reason}")
+                     f"{impact}. {reason}")
         return FinalRecommendation(
             run_id=run_id, event_id=event_id, phase=phase,
             model="; ".join(f"{a}={m}" for a, m in agent_models.items()), agent_models=agent_models,
