@@ -8,6 +8,8 @@ Two reference sources, checked in order:
      (data/processed/intel_signatures.json). A signature can be known
      malicious or known benign (like an allowlist entry).
 "No match" and "no indicators" are abstentions (verdict "unknown"), never "benign".
+
+LIMITATION: The flow signature uses `sttl` and `dttl`. In the UNSW-NB15 dataset, `sttl` and `dttl` (Time to Live) are known artifacts that artificially leak the attack label because of how the synthetic attacks were generated. This means the Intelligence agent exploits a dataset artifact rather than learning general cybersecurity intelligence.
 """
 from __future__ import annotations
 

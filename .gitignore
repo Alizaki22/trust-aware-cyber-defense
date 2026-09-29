@@ -6,3 +6,9 @@ __pycache__/
 data/raw/unsw_nb15/*.csv
 data/splits/
 data/fine_tuning/
+
+# Sensitive/Local Development
+.env
+.env.*
+venv/
+.streamlit/secrets.toml

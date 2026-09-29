@@ -1,4 +1,4 @@
-# Fine-Tuned Multi-Agent AI for Cyber Defense
+# Fine-Tuned Trust-Aware LLM Agents for Secure Multi-Agent Cyber Defense
 
 A university semester project, developed by a team of three students, building a multi-agent AI system for cybersecurity analysis. Specialized agents examine a security event, compare and verify each other's findings, and produce a final recommendation weighted by a simple, understandable trust mechanism.
 

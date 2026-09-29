@@ -2,7 +2,7 @@
 
 Owner: Member 3 (Frontend & Product) · Day 1, Phase 2 of 3 · Status: **PROPOSED — for team review**
 
-This document defines **what the frontend shows and how a user moves through it**. It is technology-agnostic: the frontend stack is still undecided (DOC_REVIEW G-01), and the wireframes are layout sketches, not visual designs.
+This document defines **what the frontend shows and how a user moves through it**. It is technology-agnostic: the frontend stack is Streamlit, and the wireframes are layout sketches, not visual designs.
 
 Every element traces back to a requirement in `DOC_REVIEW.md` (R-01 – R-24). Data fields marked *(proposed)* do not exist in the current schema (`docs/API_REFERENCE.md`); they are specified in Phase 3 (`SCHEMA_PROPOSAL.md`).
 
