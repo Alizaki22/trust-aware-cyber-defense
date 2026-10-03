@@ -1,0 +1,66 @@
+{
+  "phase": 2,
+  "agent": "detection",
+  "description": "LoRA fine-tuning configuration for the Detection Agent (Qwen3-4B-Instruct-2507). Approved by team decision D-010. Run on a GPU machine only — see docs/PHASE2_TRAINING.md.",
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "dataset": {
+    "train": "data/splits/train.jsonl",
+    "validation": "data/splits/validation.jsonl",
+    "test": "data/splits/test.jsonl",
+    "phase2_sampled_train": "data/phase2/train_sampled.jsonl",
+    "phase2_sampled_validation": "data/phase2/validation_sampled.jsonl"
+  },
+  "sampling": {
+    "enabled": true,
+    "strategy": "class_capped",
+    "description": "Cap each class at max_per_class to reduce imbalance while keeping all minority classes intact. Preserves the original splits — writes new files to data/phase2/. See docs/LLM_FINE_TUNING.md for the recommended 2k-5k target.",
+    "max_per_class": 2000,
+    "min_per_class": 100,
+    "seed": 42
+  },
+  "fine_tuning": {
+    "method": "LoRA",
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "bias": "none",
+    "task_type": "CAUSAL_LM"
+  },
+  "training": {
+    "output_dir": "runs/phase2/detection-lora",
+    "num_train_epochs": 3,
+    "per_device_train_batch_size": 4,
+    "per_device_eval_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "gradient_checkpointing": true,
+    "learning_rate": 0.0002,
+    "warmup_ratio": 0.03,
+    "weight_decay": 0.001,
+    "max_seq_length": 512,
+    "logging_steps": 10,
+    "save_strategy": "epoch",
+    "eval_strategy": "epoch",
+    "load_best_model_at_end": true,
+    "metric_for_best_model": "eval_loss",
+    "greater_is_better": false,
+    "fp16": false,
+    "bf16": false,
+    "seed": 42,
+    "report_to": "none"
+  },
+  "evaluation": {
+    "metrics": [
+      "macro_f1",
+      "schema_valid_output_rate",
+      "evidence_grounding_rate",
+      "trust_impact_rate"
+    ],
+    "note": "Run python -m src.cli calibrate and then python -m src.cli evaluate (with PHASE=2 DETECTION_MODEL=<adapter>) after training. Uses the same 494-event frozen test subset as Phase 1 (data/eval/phase1_eval_subset_ids.json)."
+  }
+}
