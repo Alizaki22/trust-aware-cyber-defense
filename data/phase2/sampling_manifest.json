@@ -1,0 +1,105 @@
+{
+  "strategy": "class_capped",
+  "max_per_class": 2000,
+  "min_per_class": 100,
+  "seed": 42,
+  "source_splits_dir": "C:\\Users\\Admin\\trust-aware-cyber-defense\\data\\splits",
+  "splits": {
+    "train": {
+      "source": "data\\splits\\train.jsonl",
+      "output": "data\\phase2\\train_sampled.jsonl",
+      "n_before": 76621,
+      "n_after": 12959,
+      "per_class": {
+        "Analysis": {
+          "before": 748,
+          "after": 748
+        },
+        "Backdoor": {
+          "before": 722,
+          "after": 722
+        },
+        "DoS": {
+          "before": 2752,
+          "after": 2000
+        },
+        "Exploits": {
+          "before": 17096,
+          "after": 2000
+        },
+        "Fuzzers": {
+          "before": 11533,
+          "after": 2000
+        },
+        "Generic": {
+          "before": 640,
+          "after": 640
+        },
+        "Normal": {
+          "before": 37207,
+          "after": 2000
+        },
+        "Reconnaissance": {
+          "before": 5074,
+          "after": 2000
+        },
+        "Shellcode": {
+          "before": 744,
+          "after": 744
+        },
+        "Worms": {
+          "before": 105,
+          "after": 105
+        }
+      }
+    },
+    "validation": {
+      "source": "data\\splits\\validation.jsonl",
+      "output": "data\\phase2\\validation_sampled.jsonl",
+      "n_before": 8525,
+      "n_after": 6390,
+      "per_class": {
+        "Analysis": {
+          "before": 83,
+          "after": 83
+        },
+        "Backdoor": {
+          "before": 79,
+          "after": 79
+        },
+        "DoS": {
+          "before": 308,
+          "after": 308
+        },
+        "Exploits": {
+          "before": 1899,
+          "after": 1899
+        },
+        "Fuzzers": {
+          "before": 1284,
+          "after": 1284
+        },
+        "Generic": {
+          "before": 74,
+          "after": 74
+        },
+        "Normal": {
+          "before": 4135,
+          "after": 2000
+        },
+        "Reconnaissance": {
+          "before": 571,
+          "after": 571
+        },
+        "Shellcode": {
+          "before": 80,
+          "after": 80
+        },
+        "Worms": {
+          "before": 12,
+          "after": 12
+        }
+      }
+    }
+  }
+}
