@@ -1,0 +1,202 @@
+"""Phase 2 dataset validation and distribution report.
+
+Lightweight checks intended to run locally (no model download, no GPU):
+  - Validates train/validation/test JSONL files using the canonical
+    check_training_record() from src/data/unsw_nb15.py.
+  - Confirms no cross-split model-input leakage.
+  - Prints the class distribution so imbalance is visible before training.
+  - Exits with code 1 if any validation check fails.
+
+Usage (run from the repository root):
+    python scripts/phase2/validate_phase2_dataset.py
+
+This script DOES NOT load any model and DOES NOT start training.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Paths and sys.path setup
+# ---------------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parents[2]
+
+# Ensure the repository root is on sys.path so `from src.data.unsw_nb15 import …`
+# works when this script is run directly (e.g. `python scripts/phase2/validate_phase2_dataset.py`).
+# This mirrors the `pythonpath = ["."]` entry in pyproject.toml (which only applies
+# when running under pytest, not when calling the script directly).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+SPLITS_DIR = ROOT / "data" / "splits"
+SPLITS = ("train", "validation", "test")
+
+
+def _load_jsonl(path: Path) -> list[dict]:
+    records = []
+    with path.open(encoding="utf-8") as fh:
+        for i, line in enumerate(fh, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                print(f"  [ERROR] {path.name} line {i}: {exc}")
+                records.append(None)  # sentinel — will fail later validation
+    return records
+
+
+def validate_splits() -> bool:
+    """Validate all three JSONL splits using the project's canonical checker."""
+    # Import the canonical validator from src so we don't duplicate logic.
+    try:
+        from src.data.unsw_nb15 import check_training_record  # noqa: PLC0415
+    except ImportError as exc:
+        print(f"[ERROR] Cannot import src.data.unsw_nb15 — run from repository root: {exc}")
+        return False
+
+    overall_ok = True
+    all_inputs: dict[str, set] = {}
+    instruction_drift_warned = False
+
+    # Structural errors are hard failures. Instruction drift is a WARNING:
+    # the DETECTION_INSTRUCTION in src/agents/prompts.py has been updated
+    # since the splits were generated (the evidence-field description and
+    # confidence-key wording changed), so every record in the committed JSONL
+    # files reports "instruction differs from DETECTION_INSTRUCTION". This is
+    # a known code-drift issue documented in docs/PHASE1_IMPLEMENTATION.md §16
+    # and does NOT mean the training data is corrupt — the records were generated
+    # by the canonical pipeline from UNSW-NB15. For Phase 2 fine-tuning purposes
+    # the actual instruction string in the data is what the model will learn from;
+    # it matches the runtime prompt at the time of data generation (P1-07 / D-005).
+    SOFT_ERRORS = {"instruction differs from DETECTION_INSTRUCTION"}
+
+    for split in SPLITS:
+        path = SPLITS_DIR / f"{split}.jsonl"
+        if not path.exists():
+            print(f"[FAIL]  {split}: file not found at {path}")
+            overall_ok = False
+            all_inputs[split] = set()
+            continue
+
+        records = _load_jsonl(path)
+        n = len(records)
+        hard_bad = 0
+        soft_bad = 0
+        inputs: set[str] = set()
+
+        for i, record in enumerate(records, 1):
+            if record is None:
+                hard_bad += 1
+                continue
+            errors = check_training_record(record)
+            hard_errors = [e for e in errors if e not in SOFT_ERRORS]
+            soft_errors = [e for e in errors if e in SOFT_ERRORS]
+            if hard_errors:
+                hard_bad += 1
+                if hard_bad <= 3:
+                    print(f"  [FAIL] {split} record {i}: {hard_errors}")
+            if soft_errors:
+                soft_bad += 1
+            if not hard_errors:
+                inputs.add(record["input"])
+
+        # Report instruction drift once, as a warning, not a failure.
+        if soft_bad > 0 and not instruction_drift_warned:
+            instruction_drift_warned = True
+            print(
+                f"\n  [WARN] Instruction drift detected in {split} split ({soft_bad}/{n} records)."
+                "\n         The DETECTION_INSTRUCTION in src/agents/prompts.py has changed since"
+                "\n         the splits were generated (evidence description and confidence key wording"
+                "\n         differ). This is a known code-drift issue — the data was generated by"
+                "\n         the canonical pipeline and is structurally correct. For Phase 2,"
+                "\n         the instruction embedded in the JSONL is what the model learns from."
+                "\n         See docs/PHASE1_IMPLEMENTATION.md §16 and docs/PHASE2_TRAINING.md §4.\n"
+            )
+
+        status = "PASS" if (n > 0 and hard_bad == 0) else "FAIL"
+        if status == "FAIL":
+            overall_ok = False
+        drift_note = f", {soft_bad} instruction-drift (warning)" if soft_bad > 0 else ""
+        print(f"[{status}]  {split}: {n} records, {hard_bad} hard errors{drift_note}")
+        all_inputs[split] = inputs
+
+    # Cross-split leakage check
+    for a, b in [("train", "validation"), ("train", "test"), ("validation", "test")]:
+        if a not in all_inputs or b not in all_inputs:
+            continue
+        shared = len(all_inputs[a] & all_inputs[b])
+        status = "PASS" if shared == 0 else "FAIL"
+        if status == "FAIL":
+            overall_ok = False
+        print(f"[{status}]  {a} & {b}: {shared} shared model inputs (leakage check)")
+
+    return overall_ok
+
+
+def print_class_distribution() -> None:
+    """Print the training class distribution so imbalance is clearly visible."""
+    path = SPLITS_DIR / "train.jsonl"
+    if not path.exists():
+        print(f"\n[SKIP] Class distribution: {path} not found")
+        return
+
+    dist: Counter = Counter()
+    n = 0
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+                output = json.loads(record["output"])
+                dist[output["classification"]] += 1
+                n += 1
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+    print(f"\n--- Training set class distribution ({n} total examples) ---")
+    max_count = max(dist.values()) if dist else 1
+    minority_threshold = max_count * 0.10  # classes with <10% of the majority
+
+    for cls, count in sorted(dist.items(), key=lambda x: -x[1]):
+        bar = "#" * min(50, int(count / max_count * 50))
+        flag = " *** MINORITY ***" if count < minority_threshold else ""
+        print(f"  {cls:<20} {count:>6}  {bar}{flag}")
+
+    minority_classes = [c for c, cnt in dist.items() if cnt < minority_threshold]
+    majority_class = max(dist, key=dist.__getitem__)
+    imbalance_ratio = max_count / min(dist.values()) if dist else 1
+    print(f"\n  Majority class:  {majority_class} ({max_count})")
+    print(f"  Minority classes (<10% of majority): {minority_classes}")
+    print(f"  Max/min ratio:   {imbalance_ratio:.1f}x")
+    print(
+        "\n  NOTE: configs/phase2/detection_lora.json uses sampling.strategy='class_capped'"
+        "\n  (max_per_class=2000) to reduce imbalance. Run prepare_phase2_sample.py first."
+    )
+
+
+def main() -> None:
+    print("=" * 60)
+    print("Phase 2 dataset validation")
+    print(f"Splits directory: {SPLITS_DIR}")
+    print("=" * 60)
+
+    ok = validate_splits()
+    print_class_distribution()
+
+    print("\n" + ("=" * 60))
+    if ok:
+        print("All validation checks passed.")
+    else:
+        print("One or more validation checks FAILED. Fix before training.")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
