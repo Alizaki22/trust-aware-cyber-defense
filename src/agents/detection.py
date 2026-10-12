@@ -38,11 +38,22 @@ class DetectionTrace:
 
 def parse_model_output(text: str) -> DetectionModelOutput:
     """Raises ValueError/ValidationError if the text is not a valid Detection finding
-    (exact keys, canonical enums, classification in DETECTION_CLASSES)."""
+    (exact keys, canonical enums, classification in DETECTION_CLASSES).
+
+    Normalises ``evidence`` when the model returns it as a JSON object or array
+    instead of a plain string, converting it to a comma-separated
+    ``field=value`` string (e.g. ``dur=58.3, proto=tcp``) so that Pydantic
+    validation is not broken by a model formatting quirk.
+    """
     data = extract_json_object(text)
     extra = set(data) - set(DetectionModelOutput.model_fields)
     if extra:
         raise ValueError(f"unexpected keys {sorted(extra)}")
+    evidence = data.get("evidence")
+    if isinstance(evidence, dict):
+        data = {**data, "evidence": ", ".join(f"{k}={v}" for k, v in evidence.items())}
+    elif isinstance(evidence, list):
+        data = {**data, "evidence": ", ".join(str(item) for item in evidence)}
     return DetectionModelOutput.model_validate(data)
 
 

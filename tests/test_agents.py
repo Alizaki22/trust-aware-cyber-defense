@@ -55,6 +55,54 @@ def test_detection_llm_failure_is_an_error_finding():
     assert finding.error and "server down" in finding.error
 
 
+# ---------------- parse_model_output: evidence normalisation
+def test_parse_model_output_string_evidence_unchanged():
+    """String evidence passes through without modification."""
+    from src.agents.detection import parse_model_output
+    out = parse_model_output(json.dumps({"verdict": "malicious", "classification": "DoS",
+                                         "evidence": "proto=udp, dur=0.1",
+                                         "confidence": "high", "reasoning": "r"}))
+    assert out.evidence == "proto=udp, dur=0.1"
+
+
+def test_parse_model_output_dict_evidence_normalised():
+    """Dict evidence is converted to a comma-separated field=value string."""
+    from src.agents.detection import parse_model_output
+    out = parse_model_output(json.dumps({"verdict": "malicious", "classification": "DoS",
+                                         "evidence": {"dur": "58.3", "proto": "tcp", "tcprtt": "0.12"},
+                                         "confidence": "high", "reasoning": "r"}))
+    pairs = dict(p.split("=", 1) for p in out.evidence.split(", "))
+    assert pairs == {"dur": "58.3", "proto": "tcp", "tcprtt": "0.12"}
+
+
+def test_parse_model_output_invalid_classification_rejected():
+    """A classification label outside DETECTION_CLASSES raises ValueError/ValidationError."""
+    import pytest
+    from pydantic import ValidationError
+    from src.agents.detection import parse_model_output
+    with pytest.raises((ValueError, ValidationError)):
+        parse_model_output(json.dumps({"verdict": "malicious", "classification": "not_a_real_class",
+                                       "evidence": "proto=tcp", "confidence": "high", "reasoning": "r"}))
+
+
+def test_parse_model_output_unexpected_top_level_key_rejected():
+    """Unexpected top-level keys (e.g. 'label') still cause a ValueError."""
+    import pytest
+    from src.agents.detection import parse_model_output
+    with pytest.raises(ValueError, match="unexpected keys"):
+        parse_model_output(json.dumps({"verdict": "benign", "classification": "Normal",
+                                       "evidence": "proto=tcp", "confidence": "low",
+                                       "reasoning": "r", "label": 0}))
+
+
+def test_parse_model_output_malformed_json_rejected():
+    """Non-JSON / malformed text raises ValueError."""
+    import pytest
+    from src.agents.detection import parse_model_output
+    with pytest.raises(ValueError):
+        parse_model_output("this is not json at all")
+
+
 def test_runtime_prompt_equals_fine_tuning_prompt():
     """Phase 1 must send exactly what Phase 2 is fine-tuned on (D-005)."""
     row = pd.Series({"id": 7, "dur": 0.1, "proto": "udp", "service": "dns", "state": "INT", "spkts": 2,
