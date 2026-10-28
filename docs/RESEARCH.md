@@ -49,7 +49,7 @@ Multi-agent AI systems used for cybersecurity analysis can produce unreliable re
 
 ## Dataset Considerations
 
-No dataset has been finalized. Candidates to evaluate (not commitments):
+The team has selected UNSW-NB15 as the primary Detection dataset (D-014). Other datasets below are alternatives considered, not current project commitments:
 
 - **CIC-IDS2017** — Canadian Institute for Cybersecurity intrusion detection dataset with labeled network flows covering DDoS, Botnets, Brute Force, and other attack types. Widely used academic benchmark, freely available for research.
 - **UNSW-NB15** — University of New South Wales network intrusion dataset with nine modern attack categories. More complex and representative than older datasets like KDD Cup 99.
@@ -69,7 +69,7 @@ Fine-tune an open-source LLM (approach: LoRA/QLoRA, to be investigated) on cyber
 
 ## Evaluation Methodology
 
-Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensions selected by the team (e.g., accuracy on a labeled test set, handling of a deliberately conflicting/misleading test case, whether trust-weighting changed the final outcome). Exact metrics are **TO BE DECIDED** — this document intentionally does not pre-select final metrics or claim expected results. See `docs/EXPERIMENTS.md` for experiment design and tracking.
+Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensions selected by the team (e.g., accuracy on a labeled test set, handling of a deliberately conflicting/misleading test case, whether trust-weighting changed the final outcome). The selected metrics are Macro-F1, schema-valid output rate, evidence grounding rate, and trust impact rate (D-016). Their definitions and limitations are documented in `docs/PHASE1_IMPLEMENTATION.md` §10. See `docs/EXPERIMENTS.md` for experiment design and tracking.
 
 ## Limitations
 
