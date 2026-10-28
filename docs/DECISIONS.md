@@ -4,7 +4,7 @@
 
 This document records important decisions agreed upon by the team, and clearly marks decisions that are still pending team approval. No entry in this log represents a fabricated or assumed team agreement — anything not yet actually decided is marked **PROPOSED — REQUIRES TEAM APPROVAL** or **TO BE DECIDED**.
 
-> **Phase 1 update:** the team's four locked decisions are recorded below as D-010 (updated), D-014, D-015 and D-016. The technical decisions made while implementing Phase 1 are summarised as D-017 and listed in full in `docs/PHASE1_IMPLEMENTATION.md` §17. D-013 is left free for the frontend-technology decision proposed in pending PR #8, which also edits this file.
+> **Phase 1 update:** the team's four locked decisions are recorded below as D-010 (updated), D-014, D-015 and D-016. The technical decisions made while implementing Phase 1 are summarised as D-017 and listed in full in `docs/PHASE1_IMPLEMENTATION.md` §17. D-013 remains reserved for the frontend-technology decision; check the relevant PR history before treating that item as pending.
 
 ## Decision Log
 
@@ -26,7 +26,7 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-014 | Primary Detection dataset: UNSW-NB15 | DECIDED BY THE TEAM |
 | D-015 | Base LLM: Qwen3-4B-Instruct-2507 (Phase 1 baseline and Phase 2 starting point) | DECIDED BY THE TEAM |
 | D-016 | Evaluation metrics: Macro-F1, schema-valid output rate, evidence grounding rate, trust impact rate | DECIDED BY THE TEAM |
-| D-017 | Phase 1 implementation decisions (P1-01 … P1-22) | IMPLEMENTED — PENDING TEAM REVIEW (Phase 1 PR) |
+| D-017 | Phase 1 implementation decisions (P1-01 … P1-22) | IMPLEMENTED — MERGED in PRs #9 and #10; formal team confirmation of D-017 is not recorded here |
 
 ---
 
