@@ -4,7 +4,7 @@
 
 This document records important decisions agreed upon by the team, and clearly marks decisions that are still pending team approval. No entry in this log represents a fabricated or assumed team agreement — anything not yet actually decided is marked **PROPOSED — REQUIRES TEAM APPROVAL** or **TO BE DECIDED**.
 
-> **Phase 1 update:** the team's four locked decisions are recorded below as D-010 (updated), D-014, D-015 and D-016. The technical decisions made while implementing Phase 1 are summarised as D-017 and listed in full in `docs/PHASE1_IMPLEMENTATION.md` §17. D-013 is left free for the frontend-technology decision proposed in pending PR #8, which also edits this file.
+> **Phase 1 update:** the team's four locked decisions are recorded below as D-010 (updated), D-014, D-015 and D-016. The technical decisions made while implementing Phase 1 are summarised as D-017 and listed in full in `docs/PHASE1_IMPLEMENTATION.md` §17. The frontend-technology proposal discussed in PR #8 was not merged; this log does not treat that proposal as an approved decision.
 
 ## Decision Log
 
@@ -26,7 +26,7 @@ This document records important decisions agreed upon by the team, and clearly m
 | D-014 | Primary Detection dataset: UNSW-NB15 | DECIDED BY THE TEAM |
 | D-015 | Base LLM: Qwen3-4B-Instruct-2507 (Phase 1 baseline and Phase 2 starting point) | DECIDED BY THE TEAM |
 | D-016 | Evaluation metrics: Macro-F1, schema-valid output rate, evidence grounding rate, trust impact rate | DECIDED BY THE TEAM |
-| D-017 | Phase 1 implementation decisions (P1-01 … P1-22) | IMPLEMENTED — PENDING TEAM REVIEW (Phase 1 PR) |
+| D-017 | Phase 1 implementation decisions (P1-01 … P1-22) | IMPLEMENTED — MERGED in PRs #9 and #10; formal team confirmation of D-017 is not recorded here |
 
 ---
 
@@ -131,7 +131,7 @@ This document records important decisions agreed upon by the team, and clearly m
 
 **Base LLM:** decided in D-015 (Qwen3-4B-Instruct-2507). Phase 1 serves it on a local OpenAI-compatible endpoint (vLLM or Ollama) and calls it through the OpenAI SDK, which resolves the API-key action item below without per-call cost.
 
-**Additional Phase 1 dependencies (pending team approval under "additional technologies require team approval"):** `pandas` (UNSW-NB15 processing) and `streamlit` (frontend, see the D-013 proposal in PR #8). Versions are pinned in `requirements.txt`.
+**Additional Phase 1 dependencies:** `pandas` (UNSW-NB15 processing) and `streamlit` (frontend) are used by the implementation and pinned in `requirements.txt`. The D-013 frontend-technology proposal in PR #8 was not merged; formal team approval of these added dependencies is not documented by that PR and should not be inferred from it.
 
 **Action item (not a decision change):** Using the OpenAI SDK for Phase 1 requires a funded API key with real per-call cost. The team should confirm who provides/pays for this key (or decide to point the same client at a free/local OpenAI-compatible endpoint instead) before Phase 1 implementation begins — this blocks the very first agent-integration task.
 
@@ -246,4 +246,4 @@ The responsibilities may be adjusted when necessary based on project requirement
 
 **Context:** They were made under the team's delegation to finalise Phase 1 details. They do not change any team decision above. They are defaults, not tuned or scientifically validated values, and the team reviews them in the Phase 1 pull request.
 
-**Status:** IMPLEMENTED — PENDING TEAM REVIEW (Phase 1 PR)
+**Status:** IMPLEMENTED — included in merged PRs #9 and #10; formal team confirmation of D-017 is not recorded in this log.

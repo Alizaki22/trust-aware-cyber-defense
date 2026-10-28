@@ -1,6 +1,6 @@
 # Phase 1 Implementation (Baseline)
 
-Status: **IMPLEMENTED on `feature/phase-1-baseline` — pending review.** This document is the source of truth for how the Phase 1 baseline actually works. It records every technical decision made to complete Phase 1 (§17), and it distinguishes implementation choices from open research questions.
+Status: **Phase 1 implementation and final review changes are merged into `development` (PRs #9 and #10).** This document describes the implemented baseline, records the technical decisions made to complete Phase 1 (§17), and distinguishes implementation choices from open research questions. The real Qwen3-4B-Instruct-2507 baseline evaluation remains outstanding; see the status note below.
 
 > **No Qwen3-4B-Instruct-2507 results exist yet.** The development environment used to build this branch had no GPU and no access to model hosts, so the base model could not be run. Every pipeline stage was tested end to end with a clearly labelled **stub** Detection model (`stub:always-normal`). §14 lists exactly which numbers are real and which are stub-only. The commands in §12 produce the real baseline on a machine that can serve the model.
 

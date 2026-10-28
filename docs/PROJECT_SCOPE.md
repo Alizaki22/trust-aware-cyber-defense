@@ -52,7 +52,7 @@ Three students. Task distribution is documented in `DECISIONS.md` (D-008). All m
 - Introduce a fine-tuned open-source LLM (parameter-efficient methods such as LoRA/QLoRA to be investigated).
 - Reuse the Phase 1 multi-agent structure, verification, and trust mechanism.
 - Compare Phase 1 (base LLM) against Phase 2 (fine-tuned LLM) using a small set of meaningful metrics.
-- **Which agent(s) use the fine-tuned model is TO BE DECIDED**, based on dataset availability, hardware, training feasibility, time, student skill level, experimental design, and educational value. No agent is assumed to be fine-tuned by default.
+- **The Detection agent is the only agent selected for fine-tuning** (see D-010 in `DECISIONS.md`). The other agent roles remain on the base model unless the team records a new decision.
 
 ### Multi-Agent Scope
 
@@ -64,7 +64,7 @@ A conceptual, non-final trust model based on three understandable factors: histo
 
 ### Fine-Tuning Scope
 
-Investigated only in Phase 2. Applies parameter-efficient fine-tuning to an open-source LLM using cybersecurity-related data, scoped to what is feasible on available hardware and student skill level. Target agent(s) not yet decided.
+Investigated only in Phase 2. Applies parameter-efficient fine-tuning to an open-source LLM using cybersecurity-related data, scoped to what is feasible on available hardware and student skill level. The Detection agent is the selected fine-tuning target (D-010).
 
 ### Evaluation Scope
 

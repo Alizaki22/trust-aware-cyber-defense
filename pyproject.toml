@@ -1,7 +1,7 @@
 [project]
-name = "Fine-Tuned Trust-Aware LLM Agents for Secure Multi-Agent Cyber Defense"
+name = "fine-tuned-multi-agent-ai-for-cyber-defense"
 version = "0.1.0"
-description = "Fine-Tuned Trust-Aware LLM Agents for Secure Multi-Agent Cyber Defense - Phase 1 baseline"
+description = "Academic prototype for trust-aware multi-agent cybersecurity analysis, verification, and simulated recommendations."
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
