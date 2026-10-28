@@ -40,9 +40,9 @@ Use descriptive branch names following these conventions:
 3. Write descriptive commit messages (see Commit Messages below).
 4. Open a Pull Request targeting `development`.
 5. Fill in the PR template (`.github/PULL_REQUEST_TEMPLATE.md`).
-6. Wait for at least one team member to review.
-7. Address review feedback.
-8. Merge only after approval.
+6. Review the diff, check applicable status checks, and address any feedback.
+7. Request a teammate review when collaborating or when a change benefits from independent review.
+8. Merge when the change is ready and all repository-enforced requirements are satisfied. Approval is not a default requirement unless an active repository rule requires it.
 
 ### Commit Messages
 
