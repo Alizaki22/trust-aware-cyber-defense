@@ -1,27 +1,27 @@
-# Fine-Tuned Trust-Aware LLM Agents for Secure Multi-Agent Cyber Defense
+# Fine-Tuned Multi-Agent AI for Cyber Defense
 
-A university semester project, developed by a team of three students, building a multi-agent AI system for cybersecurity analysis. Specialized agents examine a security event, compare and verify each other's findings, and produce a final recommendation weighted by a simple, understandable trust mechanism.
+A university semester project by a team of three students exploring a trust-aware, multi-agent AI system for cybersecurity analysis. Specialized agents examine a security event, verify one another's findings, and produce a final recommendation using an interpretable trust mechanism.
 
-This is an academic learning project — not an enterprise cybersecurity platform.
+This is an academic learning project, not an enterprise cybersecurity platform. **Fine-tuning is planned for Phase 2 and has not started yet.**
 
 ## Problem
 
-AI agents can assist with cybersecurity analysis, but their outputs may be incorrect, incomplete, conflicting, or misleading. Trusting every agent output equally risks poor decisions when one or more agents are wrong.
+AI agents can assist with cybersecurity analysis, but their outputs may be incorrect, incomplete, conflicting, or misleading. Treating every agent output as equally reliable can lead to poor decisions when one or more agents are wrong.
 
 ## Proposed Solution
 
-Specialized agents (Detection, Intelligence, Behavioral Analysis) analyze a security event. A Verification Agent checks their findings against the evidence cited. A trust mechanism weighs each agent's influence on the final decision based on historical accuracy, verification results, and agreement with trusted peers. The final recommendation can route to a simulated action, further verification, or human review.
+Detection, Intelligence, and Behavioral Analysis agents examine a security event. A Verification agent checks findings against the cited evidence. A trust mechanism weighs agent influence using historical accuracy, verification results, and agreement with other agents. The system then recommends a simulated action, further verification, or human review.
 
-## Two Development Phases
+## Development Phases
 
-- **Phase 1 — Baseline:** built using a normal/base LLM. Establishes the multi-agent structure, verification, and trust mechanism.
-- **Phase 2 — Fine-Tuned System:** extends Phase 1 by introducing a fine-tuned open-source LLM (parameter-efficient fine-tuning, e.g. LoRA/QLoRA) and compares results against the Phase 1 baseline. The fine-tuned model is used by the **Detection agent only** (team decision; see `docs/PHASE1_IMPLEMENTATION.md`).
+- **Phase 1 — Baseline:** the implemented system establishes the multi-agent pipeline, verification, trust mechanism, evaluation workflow, and Streamlit interface using the base Qwen3-4B-Instruct-2507 model.
+- **Phase 2 — Fine-tuned extension (planned):** fine-tune the same base model using a parameter-efficient method such as LoRA/QLoRA, then compare it with the Phase 1 baseline. Per the team's recorded decision (D-010), **only the Detection agent will use the fine-tuned model**.
 
-Phase 1 is the baseline for Phase 2 — Phase 2 extends the same system rather than rebuilding it.
+Phase 2 is intended to extend Phase 1, not rebuild it, so the team can make a more meaningful comparison. See `docs/DECISIONS.md` and `docs/LLM_FINE_TUNING.md`.
 
 ## Architecture Overview
 
-```
+```text
 Security Information
         ↓
 Coordinator
@@ -37,92 +37,103 @@ Final Recommendation
 Simulated Action / Further Verification / Human Review
 ```
 
-Full detail: `docs/ARCHITECTURE.md`, `docs/architecture/AGENT_SPECIFICATION.md`, `docs/architecture/DATA_FLOW.md`.
-
-## Fine-Tuning
-
-Investigated in Phase 2 only, using parameter-efficient methods on an open-source LLM with cybersecurity-related data. The exact agent(s) fine-tuned is not yet decided. See `docs/RESEARCH.md`.
+For details, see `docs/ARCHITECTURE.md`, `docs/architecture/AGENT_SPECIFICATION.md`, and `docs/architecture/DATA_FLOW.md`.
 
 ## Trust-Aware Decision Making
 
-A conceptual trust score per agent, based on historical accuracy, verification results, and agreement with trusted peers — not on an agent's self-reported confidence. Verification result is one input into the trust score, applied once. See `docs/architecture/TRUST_MODEL.md`.
+Each agent receives a conceptual trust score informed by historical accuracy, verification results, and agreement with peers—not by the agent's self-reported confidence. Verification is incorporated once in the trust calculation. See `docs/architecture/TRUST_MODEL.md`.
 
 ## Evaluation
 
-Phase 1 (base LLM) is compared against Phase 2 (fine-tuned LLM) on a small set of meaningful, measurable dimensions. No results are assumed in advance. See `docs/RESEARCH.md`.
+The team has selected four evaluation metrics:
+
+- **Macro-F1** for the Detection agent's classification performance
+- **Schema-valid output rate**
+- **Evidence grounding rate**
+- **Trust impact rate**, measuring how often trust-weighted voting changes the outcome compared with equal weighting
+
+The pipeline and metric implementations have tests, but **real Qwen3-4B-Instruct-2507 baseline results have not yet been produced**. We will report measured results rather than assume that fine-tuning or trust weighting improves performance. Metric definitions and limitations are documented in `docs/PHASE1_IMPLEMENTATION.md` and `docs/EXPERIMENTS.md`.
 
 ## Safety
 
-This is a defensive, academic project. The system only ever recommends or simulates actions — it never executes real actions against live infrastructure. See `docs/THREAT_MODEL.md`.
-
-## Repository Structure
-
-```
-src/                     Phase 1 implementation (python -m src.cli ...)
-  models/                Pydantic schemas (SecurityEvent, AgentFinding, FinalRecommendation, ...)
-  agents/                detection (LLM), intelligence, behavioral, verification (rules), prompts
-  trust/                 trust formula + calibration-based historical accuracy
-  recommendation/        trust-weighted vs equal-weighted vote, routing
-  coordinator/           pipeline orchestration
-  data/unsw_nb15.py      UNSW-NB15 preparation, leakage checks, frozen subsets
-  evaluation/            the four metrics + calibration/evaluation runs
-  utils/llm_client.py    OpenAI-compatible client (Qwen3-4B-Instruct-2507) + offline stub
-  api.py, pipeline.py, config.py, cli.py
-frontend/                Streamlit app (app.py) + display helpers
-tests/                   pytest suite (112 tests)
-data/
-  threat_intel/, baselines/, events/   small SYNTHETIC reference data (committed)
-  eval/                  frozen evaluation/calibration subset ids (committed)
-  raw/, splits/, processed/            official CSVs and generated files (gitignored)
-docs/                    project documentation (PHASE1_IMPLEMENTATION.md = how Phase 1 works)
-  architecture/, frontend/
-runs/                    calibration and evaluation outputs (gitignored)
-.github/  AGENTS.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md  README.md
-requirements.txt  pyproject.toml
-```
-
-## Documentation
-
-- [`docs/PROJECT_SCOPE.md`](docs/PROJECT_SCOPE.md) — problem, goals, phases, scope
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — conceptual system design and components
-- [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) — implementation-level architecture, tech stack, project structure
-- [`docs/architecture/AGENT_SPECIFICATION.md`](docs/architecture/AGENT_SPECIFICATION.md) — per-agent role detail
-- [`docs/AGENT_DESIGN.md`](docs/AGENT_DESIGN.md) — agent implementation design (base class, prompting, error handling)
-- [`docs/architecture/TRUST_MODEL.md`](docs/architecture/TRUST_MODEL.md) — trust mechanism
-- [`docs/architecture/DATA_FLOW.md`](docs/architecture/DATA_FLOW.md) — data flow through the system
-- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) — internal API/data model reference
-- [`docs/DATASET.md`](docs/DATASET.md) — dataset candidates and licensing requirements
-- [`docs/LLM_FINE_TUNING.md`](docs/LLM_FINE_TUNING.md) — Phase 2 fine-tuning approach
-- [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md) — local setup and development workflow
-- [`docs/TESTING.md`](docs/TESTING.md) — testing strategy
-- [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) — evaluation experiments and results tracking
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — decision log
-- [`docs/RESEARCH.md`](docs/RESEARCH.md) — research foundation
-- [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — threats and mitigations
-- [`AGENTS.md`](AGENTS.md) — instructions for AI coding agents working in this repo
-- [`docs/PHASE1_IMPLEMENTATION.md`](docs/PHASE1_IMPLEMENTATION.md) — how the implemented Phase 1 baseline works (schemas, data, trust, metrics, commands)
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and Git workflow guide
-- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — community standards
-- [`SECURITY.md`](SECURITY.md) — security policy and reporting
+This is a defensive academic project. The system recommends or simulates actions only; it does not execute actions against live infrastructure. See `docs/THREAT_MODEL.md`.
 
 ## Project Status
 
-🧪 **Phase 1 baseline implemented** (UNSW-NB15 · Qwen3-4B-Instruct-2507 · four agents · trust/verification · evaluation · Streamlit frontend). The pipeline and all four metrics are tested end to end; **real Qwen3-4B-Instruct-2507 baseline results have not been produced yet** (see `docs/PHASE1_IMPLEMENTATION.md` §14). Phase 2 (Detection fine-tuning) is not started. The project license (D-012) is still open.
+- **Phase 1:** implementation and end-to-end pipeline tests are in place.
+- **Real-model baseline:** results are not yet available.
+- **Phase 2 fine-tuning:** not started.
+- **Project license:** not yet selected; see decision D-012 in `docs/DECISIONS.md`.
 
-### Quick start
+## Repository Structure
+
+```text
+src/                     Phase 1 implementation (python -m src.cli ...)
+  models/                Pydantic schemas
+  agents/                Detection (LLM), Intelligence, Behavioral Analysis, Verification
+  trust/                 Trust formula and calibration-based historical accuracy
+  recommendation/        Trust-weighted/equal-weighted voting and routing
+  coordinator/           Pipeline orchestration
+  data/unsw_nb15.py      Dataset preparation and leakage checks
+  evaluation/            Metrics, calibration, and evaluation runs
+  utils/llm_client.py    OpenAI-compatible client and offline stub
+frontend/                Streamlit app and display helpers
+tests/                   pytest suite (112 tests)
+data/                    Synthetic reference data and evaluation subset IDs
+docs/                    Project, architecture, research, testing, and implementation docs
+runs/                    Calibration/evaluation outputs (gitignored)
+.github/                 GitHub workflow/configuration files
+requirements.txt
+pyproject.toml
+```
+
+Raw dataset files and generated artifacts are not committed. Synthetic reference data is labelled as synthetic.
+
+## Documentation
+
+- [Project scope](docs/PROJECT_SCOPE.md) — goals, phases, and boundaries
+- [Architecture](docs/ARCHITECTURE.md) — system design and components
+- [System architecture](docs/SYSTEM_ARCHITECTURE.md) — implementation-level architecture
+- [Agent specification](docs/architecture/AGENT_SPECIFICATION.md) — each agent's role
+- [Agent design](docs/AGENT_DESIGN.md) — implementation patterns and error handling
+- [Trust model](docs/architecture/TRUST_MODEL.md) — trust mechanism
+- [Data flow](docs/architecture/DATA_FLOW.md) — pipeline flow
+- [API reference](docs/API_REFERENCE.md) — internal data models and interfaces
+- [Dataset notes](docs/DATASET.md) — data sources and licensing
+- [Fine-tuning plan](docs/LLM_FINE_TUNING.md) — Phase 2 methodology
+- [Development guide](docs/DEVELOPMENT_GUIDE.md) — setup and workflow
+- [Testing](docs/TESTING.md) — testing strategy
+- [Experiments](docs/EXPERIMENTS.md) — experiment design and results tracking
+- [Decision log](docs/DECISIONS.md) — agreed and pending decisions
+- [Research](docs/RESEARCH.md) — background and related work
+- [Threat model](docs/THREAT_MODEL.md) — threats and mitigations
+- [Phase 1 implementation](docs/PHASE1_IMPLEMENTATION.md) — implemented baseline, metrics, and commands
+- [Contributing guide](CONTRIBUTING.md) — contribution and Git workflow
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- [Security policy](SECURITY.md)
+- [Instructions for AI coding agents](AGENTS.md)
+
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
-# put UNSW_NB15_training-set.csv and UNSW_NB15_testing-set.csv in data/raw/unsw_nb15/
-python -m src.cli prepare-data && python -m src.cli validate-data
-vllm serve Qwen/Qwen3-4B-Instruct-2507          # or see PHASE1_IMPLEMENTATION.md §6 for Ollama
-python -m src.cli calibrate && python -m src.cli evaluate
+
+# Download the official UNSW-NB15 training and testing CSVs, then place them in:
+# data/raw/unsw_nb15/
+python -m src.cli prepare-data
+python -m src.cli validate-data
+
+# Start the local model server (see the implementation guide for Ollama instructions):
+vllm serve Qwen/Qwen3-4B-Instruct-2507
+
+python -m src.cli calibrate
+python -m src.cli evaluate
 streamlit run frontend/app.py
 pytest
 ```
 
-Without a model server, add `--backend stub` (CLI) or set `LLM_BACKEND=stub` (Streamlit) to run the pipeline with a clearly labelled stub Detection model. Full details: [`docs/PHASE1_IMPLEMENTATION.md`](docs/PHASE1_IMPLEMENTATION.md).
+Without a model server, use `--backend stub` for the CLI or set `LLM_BACKEND=stub` for Streamlit to run with a clearly labelled stub Detection model. The stub is useful for testing the pipeline, **not** for reporting real model performance. Full setup instructions: [Phase 1 implementation guide](docs/PHASE1_IMPLEMENTATION.md).
 
 ## Team
 
-Three students. See `docs/DECISIONS.md` (D-008) for the agreed task distribution.
+The project is developed by three students. See [D-008 in the decision log](docs/DECISIONS.md) for the agreed workstream distribution.

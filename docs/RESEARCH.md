@@ -49,7 +49,7 @@ Multi-agent AI systems used for cybersecurity analysis can produce unreliable re
 
 ## Dataset Considerations
 
-No dataset has been finalized. Candidates to evaluate (not commitments):
+The team has selected UNSW-NB15 as the primary Detection dataset (D-014). Other datasets below are alternatives considered, not current project commitments:
 
 - **CIC-IDS2017** — Canadian Institute for Cybersecurity intrusion detection dataset with labeled network flows covering DDoS, Botnets, Brute Force, and other attack types. Widely used academic benchmark, freely available for research.
 - **UNSW-NB15** — University of New South Wales network intrusion dataset with nine modern attack categories. More complex and representative than older datasets like KDD Cup 99.
@@ -65,11 +65,11 @@ Build the four logical agents using a base/normal LLM with role-specific prompti
 
 ## Phase 2 Methodology
 
-Fine-tune an open-source LLM (approach: LoRA/QLoRA, to be investigated) on cybersecurity-related data. **Which agent(s) receive the fine-tuned model is not yet decided** (see `docs/DECISIONS.md`, D-010) — the choice depends on dataset availability, hardware, training feasibility, time, student skill level, experimental design, and educational value. Integrate the fine-tuned model into the same architecture used in Phase 1, changing only the model, not the surrounding system. See `docs/LLM_FINE_TUNING.md` for fine-tuning methodology details.
+Fine-tune an open-source LLM (approach: LoRA/QLoRA, to be investigated) on cybersecurity-related data. **Only the Detection agent receives the fine-tuned model in Phase 2**, as decided in `docs/DECISIONS.md` (D-010). Integrate the fine-tuned model into the same architecture used in Phase 1, changing only the model, not the surrounding system. See `docs/LLM_FINE_TUNING.md` for fine-tuning methodology details.
 
 ## Evaluation Methodology
 
-Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensions selected by the team (e.g., accuracy on a labeled test set, handling of a deliberately conflicting/misleading test case, whether trust-weighting changed the final outcome). Exact metrics are **TO BE DECIDED** — this document intentionally does not pre-select final metrics or claim expected results. See `docs/EXPERIMENTS.md` for experiment design and tracking.
+Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensions selected by the team (e.g., accuracy on a labeled test set, handling of a deliberately conflicting/misleading test case, whether trust-weighting changed the final outcome). The selected metrics are Macro-F1, schema-valid output rate, evidence grounding rate, and trust impact rate (D-016). Their definitions and limitations are documented in `docs/PHASE1_IMPLEMENTATION.md` §10. See `docs/EXPERIMENTS.md` for experiment design and tracking.
 
 ## Limitations
 
@@ -79,9 +79,9 @@ Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensi
 
 ## Research Gaps
 
-- Which agent(s) will be fine-tuned in Phase 2 is unresolved.
-- No baseline experiments have been run.
-- No dataset has been finalized (candidates identified — see Dataset Considerations above and `docs/DATASET.md`).
+- Real Qwen3-4B-Instruct-2507 baseline results have not yet been produced; see `docs/PHASE1_IMPLEMENTATION.md` §14.
+- Phase 2 fine-tuning has not started.
+- Optimal trust model weights and thresholds require empirical tuning once the system is operational.
 - Optimal trust model weights and thresholds require empirical tuning once the system is operational.
 
 ## References
