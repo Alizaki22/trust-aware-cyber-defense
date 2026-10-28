@@ -79,9 +79,9 @@ Compare Phase 1 and Phase 2 using a small number of concrete, measurable dimensi
 
 ## Research Gaps
 
-- Which agent(s) will be fine-tuned in Phase 2 is unresolved.
-- No baseline experiments have been run.
-- No dataset has been finalized (candidates identified — see Dataset Considerations above and `docs/DATASET.md`).
+- Real Qwen3-4B-Instruct-2507 baseline results have not yet been produced; see `docs/PHASE1_IMPLEMENTATION.md` §14.
+- Phase 2 fine-tuning has not started.
+- Optimal trust model weights and thresholds require empirical tuning once the system is operational.
 - Optimal trust model weights and thresholds require empirical tuning once the system is operational.
 
 ## References
