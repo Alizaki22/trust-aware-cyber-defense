@@ -21,21 +21,22 @@ Phase 2 is intended to extend Phase 1, not rebuild it, so the team can make a mo
 
 ## Architecture Overview
 
-```text
-Security Information
-        ↓
-Coordinator
-        ↓
-Detection / Intelligence / Behavioral Analysis
-        ↓
-Verification
-        ↓
-Trust Evaluation
-        ↓
-Final Recommendation
-        ↓
-Simulated Action / Further Verification / Human Review
+```mermaid
+flowchart TD
+    E[Security Event] --> C[Coordinator]
+    C --> D[Detection Agent<br/>Qwen3-4B-Instruct-2507]
+    C --> I[Intelligence Agent<br/>IOC and train-split signatures]
+    C --> B[Behavioral Analysis<br/>Normal-profile comparison]
+    D --> V[Verification]
+    I --> V
+    B --> V
+    V --> T[Trust Evaluation<br/>History · verification · peer agreement]
+    T --> R[Recommendation Engine<br/>Trust-weighted vs equal-weighted]
+    R --> O[Final Recommendation]
+    O --> H[Human Review / Further Verification / Simulated Action]
 ```
+
+Detection uses the base LLM in Phase 1. Intelligence and Behavioral Analysis are rule-based; the agents run independently and communicate through structured findings collected by the Coordinator. The system records recommendations only—**it does not execute actions against live infrastructure**.
 
 For details, see `docs/ARCHITECTURE.md`, `docs/architecture/AGENT_SPECIFICATION.md`, and `docs/architecture/DATA_FLOW.md`.
 
