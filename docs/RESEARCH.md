@@ -65,7 +65,7 @@ Build the four logical agents using a base/normal LLM with role-specific prompti
 
 ## Phase 2 Methodology
 
-Fine-tune an open-source LLM (approach: LoRA/QLoRA, to be investigated) on cybersecurity-related data. **Which agent(s) receive the fine-tuned model is not yet decided** (see `docs/DECISIONS.md`, D-010) — the choice depends on dataset availability, hardware, training feasibility, time, student skill level, experimental design, and educational value. Integrate the fine-tuned model into the same architecture used in Phase 1, changing only the model, not the surrounding system. See `docs/LLM_FINE_TUNING.md` for fine-tuning methodology details.
+Fine-tune an open-source LLM (approach: LoRA/QLoRA, to be investigated) on cybersecurity-related data. **Only the Detection agent receives the fine-tuned model in Phase 2**, as decided in `docs/DECISIONS.md` (D-010). Integrate the fine-tuned model into the same architecture used in Phase 1, changing only the model, not the surrounding system. See `docs/LLM_FINE_TUNING.md` for fine-tuning methodology details.
 
 ## Evaluation Methodology
 
